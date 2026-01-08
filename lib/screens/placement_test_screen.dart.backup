@@ -1,0 +1,632 @@
+import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import 'package:audioplayers/audioplayers.dart';
+import '../data/placement_test_data.dart';
+import 'home_screen.dart';
+import 'dart:math' as math;
+
+class PlacementTestScreen extends StatefulWidget {
+  final String childName;
+  final int childAge;
+
+  const PlacementTestScreen({
+    super.key,
+    required this.childName,
+    required this.childAge,
+  });
+
+  @override
+  State<PlacementTestScreen> createState() => _PlacementTestScreenState();
+}
+
+class _PlacementTestScreenState extends State<PlacementTestScreen>
+    with TickerProviderStateMixin {
+  int _currentQuestionIndex = 0;
+  int _correctAnswers = 0;
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  late List<TestQuestion> _questions;
+  late AnimationController _bounceController;
+  late AnimationController _slideController;
+  bool _isAnswered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _questions = PlacementTestData.getAllQuestions();
+
+    _bounceController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+
+    _slideController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _slideController.forward();
+  }
+
+  @override
+  void dispose() {
+    _audioPlayer.dispose();
+    _bounceController.dispose();
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  void _playSound() async {
+    final question = _questions[_currentQuestionIndex];
+    if (question.audioPath != null) {
+      try {
+        await _audioPlayer.play(AssetSource(question.audioPath!));
+      } catch (e) {
+        print('Error playing sound: $e');
+      }
+    }
+  }
+
+  void _checkAnswer(String selectedAnswer) {
+    if (_isAnswered) return;
+
+    setState(() {
+      _isAnswered = true;
+    });
+
+                  isCorrect ? 'أحسنت! 🎉' : 'حاول مرة أخرى 💪',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showResults() {
+    final level = PlacementTestData.determineLevelFromScore(_correctAnswers);
+    final message = PlacementTestData.getEncouragementMessage(_correctAnswers);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF6A11CB),
+                  Color(0xFF2575FC),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(30),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/images/characters/arab_kids_celebrating_1764934121585.png',
+                  height: 120,
+                  errorBuilder: (context, error, stackTrace) => Icon(
+                    Icons.celebration,
+                    size: 80,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                Text(
+                  'نتيجتك: $_correctAnswers / ${_questions.length}',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    level,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const HomeScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Color(0xFF2575FC),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 35, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(25),
+                    ),
+                  ),
+                  child: Text(
+                    'ابدأ التعلم! 🚀',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _skipTest() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomeScreen(),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final question = _questions[_currentQuestionIndex];
+    final progress = (_currentQuestionIndex + 1) / _questions.length;
+
+    return Scaffold(
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage(
+                'assets/images/backgrounds/background_pattern_stars_1764934179475.png'),
+            fit: BoxFit.cover,
+            opacity: 0.3,
+          ),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFFFFE5E5),
+              Color(0xFFFFF0F0),
+              Color(0xFFE5F3FF),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // الشريط العلوي
+              Padding(
+                padding: EdgeInsets.all(screenHeight * 0.02),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // زر التخطي
+                    TextButton.icon(
+                      onPressed: _skipTest,
+                      icon: Icon(Icons.skip_next, color: Color(0xFFFF6B6B)),
+                      label: Text(
+                        'تخطي',
+                        style: TextStyle(
+                          fontSize: screenHeight * 0.022,
+                          color: Color(0xFFFF6B6B),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+
+                    // شخصية طفولية
+                    Image.asset(
+                      'assets/images/characters/arab_child_thinking_1764934154475.png',
+                      height: screenHeight * 0.08,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.child_care,
+                        size: screenHeight * 0.06,
+                        color: AppTheme.primarySkyBlue,
+                      ),
+                    ),
+
+                    // عداد الأسئلة
+                    Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: screenWidth * 0.04,
+                        vertical: screenHeight * 0.015,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0xFFFF6B6B).withOpacity(0.3),
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '${_currentQuestionIndex + 1} / ${_questions.length}',
+                        style: TextStyle(
+                          fontSize: screenHeight * 0.025,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // شريط التقدم
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(15),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: screenHeight * 0.015,
+                    backgroundColor: Colors.white.withOpacity(0.3),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Color(0xFF4CAF50),
+                    ),
+                  ),
+                ),
+              ),
+
+              SizedBox(height: screenHeight * 0.03),
+
+              // المحتوى الرئيسي
+              Expanded(
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(CurvedAnimation(
+                    parent: _slideController,
+                    curve: Curves.easeOutCubic,
+                  )),
+                  child: _buildQuestionContent(
+                      question, screenHeight, screenWidth),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuestionContent(
+      TestQuestion question, double screenHeight, double screenWidth) {
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
+        child: Column(
+          children: [
+            // عنوان السؤال
+            Container(
+              padding: EdgeInsets.all(screenHeight * 0.025),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Text(
+                question.question,
+                style: TextStyle(
+                  fontSize: screenHeight * 0.028,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF2C3E50),
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+
+            SizedBox(height: screenHeight * 0.03),
+
+            // محتوى السؤال
+            if (question.type == QuestionType.audioToLetter)
+              _buildAudioQuestion(question, screenHeight)
+            else if (question.type == QuestionType.imageToFirstLetter ||
+                question.type == QuestionType.countLetters ||
+                question.type == QuestionType.completeWord)
+              _buildImageQuestion(question, screenHeight)
+            else if (question.type == QuestionType.wordToImage)
+              _buildWordToImageQuestion(question, screenHeight, screenWidth)
+            else if (question.type == QuestionType.imageToWord)
+              _buildImageToWordQuestion(question, screenHeight, screenWidth),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioQuestion(TestQuestion question, double screenHeight) {
+    return Column(
+      children: [
+        // زر تشغيل الصوت
+        GestureDetector(
+          onTap: _playSound,
+          child: Container(
+            width: screenHeight * 0.2,
+            height: screenHeight * 0.2,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFF6B6B), Color(0xFFFF8E8E)],
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFFFF6B6B).withOpacity(0.4),
+                  blurRadius: 20,
+                  offset: Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Icon(
+              Icons.volume_up,
+              size: screenHeight * 0.1,
+              color: Colors.white,
+            ),
+          ),
+        ),
+
+        SizedBox(height: screenHeight * 0.04),
+
+        // الخيارات
+        _buildTextOptions(question.options, screenHeight),
+      ],
+    );
+  }
+
+  Widget _buildImageQuestion(TestQuestion question, double screenHeight) {
+    return Column(
+      children: [
+        // الصورة
+        Container(
+          height: screenHeight * 0.25,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 15,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: Image.asset(
+              'assets/${question.imagePath}',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.image,
+                size: screenHeight * 0.1,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ),
+
+        SizedBox(height: screenHeight * 0.03),
+
+        // الخيارات
+        _buildTextOptions(question.options, screenHeight),
+      ],
+    );
+  }
+
+  Widget _buildWordToImageQuestion(
+      TestQuestion question, double screenHeight, double screenWidth) {
+    return Column(
+      children: [
+        // الكلمة
+        Container(
+          padding: EdgeInsets.all(screenHeight * 0.03),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+            ),
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Color(0xFF2575FC).withOpacity(0.3),
+                blurRadius: 15,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Text(
+            question.word ?? '',
+            style: TextStyle(
+              fontSize: screenHeight * 0.05,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+            ),
+          ),
+        ),
+
+        SizedBox(height: screenHeight * 0.03),
+
+        // خيارات الصور
+        GridView.builder(
+          shrinkWrap: true,
+          physics: NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: screenWidth * 0.03,
+            mainAxisSpacing: screenHeight * 0.02,
+            childAspectRatio: 1.0,
+          ),
+          itemCount: question.options.length,
+          itemBuilder: (context, index) {
+            return _buildImageOption(question.options[index], screenHeight);
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageToWordQuestion(
+      TestQuestion question, double screenHeight, double screenWidth) {
+    return Column(
+      children: [
+        // الصورة
+        Container(
+          height: screenHeight * 0.25,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 15,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: Image.asset(
+              'assets/${question.imagePath}',
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.image,
+                size: screenHeight * 0.1,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ),
+
+        SizedBox(height: screenHeight * 0.03),
+
+        // خيارات الكلمات
+        _buildTextOptions(question.options, screenHeight),
+      ],
+    );
+  }
+
+  Widget _buildTextOptions(List<String> options, double screenHeight) {
+    return Wrap(
+      spacing: screenHeight * 0.02,
+      runSpacing: screenHeight * 0.02,
+      alignment: WrapAlignment.center,
+      children: options.map((option) {
+        return GestureDetector(
+          onTap: () => _checkAnswer(option),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: screenHeight * 0.04,
+              vertical: screenHeight * 0.025,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF4CAF50).withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Text(
+              option,
+              style: TextStyle(
+                fontSize: screenHeight * 0.04,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildImageOption(String imagePath, double screenHeight) {
+    return GestureDetector(
+      onTap: () => _checkAnswer(imagePath),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: Color(0xFF4CAF50),
+            width: 3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(17),
+          child: Image.asset(
+            'assets/$imagePath',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Icon(
+              Icons.image,
+              size: screenHeight * 0.06,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
