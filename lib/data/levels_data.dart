@@ -280,10 +280,123 @@ class LevelsData {
     ],
   );
 
+  // مرحلة المتقدم - الخط والكتابة اليدوية
+  static final Stage advancedStage = Stage(
+    id: 'advanced',
+    name: 'المرحلة المتقدمة',
+    description: 'تعلم كتابة الحروف بخط جميل',
+    iconPath: 'assets/images/ui/stage_advanced.png',
+    requiredStarsToUnlock: 0,
+    levels: [
+      // المستوى 1: الحروف (أ - ج)
+      Level(
+        id: 1,
+        title: 'الحروف الأولى',
+        targetLetters: ['ا', 'ب', 'ت', 'ث', 'ج'],
+        requiredStarsToUnlock: 0,
+        lessons: [
+          Lesson(
+            id: 'advanced_1_lesson',
+            title: 'تعلم كتابة الحروف',
+            type: LessonType.writing,
+            targetLetters: ['ا', 'ب', 'ت', 'ث', 'ج'],
+          ),
+        ],
+        games: [],
+      ),
+
+      // المستوى 2: الحروف (ح - ر)
+      Level(
+        id: 2,
+        title: 'حروف جديدة',
+        targetLetters: ['ح', 'خ', 'د', 'ذ', 'ر'],
+        requiredStarsToUnlock: 5,
+        lessons: [
+          Lesson(
+            id: 'advanced_2_lesson',
+            title: 'تعلم كتابة الحروف',
+            type: LessonType.writing,
+            targetLetters: ['ح', 'خ', 'د', 'ذ', 'ر'],
+          ),
+        ],
+        games: [],
+      ),
+
+      // المستوى 3: الحروف (ز - ض)
+      Level(
+        id: 3,
+        title: 'المزيد من الحروف',
+        targetLetters: ['ز', 'س', 'ش', 'ص', 'ض'],
+        requiredStarsToUnlock: 10,
+        lessons: [
+          Lesson(
+            id: 'advanced_3_lesson',
+            title: 'تعلم كتابة الحروف',
+            type: LessonType.writing,
+            targetLetters: ['ز', 'س', 'ش', 'ص', 'ض'],
+          ),
+        ],
+        games: [],
+      ),
+
+      // المستوى 4: الحروف (ط - ف)
+      Level(
+        id: 4,
+        title: 'حروف مميزة',
+        targetLetters: ['ط', 'ظ', 'ع', 'غ', 'ف'],
+        requiredStarsToUnlock: 15,
+        lessons: [
+          Lesson(
+            id: 'advanced_4_lesson',
+            title: 'تعلم كتابة الحروف',
+            type: LessonType.writing,
+            targetLetters: ['ط', 'ظ', 'ع', 'غ', 'ف'],
+          ),
+        ],
+        games: [],
+      ),
+
+      // المستوى 5: الحروف (ق - ن)
+      Level(
+        id: 5,
+        title: 'نواصل التعلم',
+        targetLetters: ['ق', 'ك', 'ل', 'م', 'ن'],
+        requiredStarsToUnlock: 20,
+        lessons: [
+          Lesson(
+            id: 'advanced_5_lesson',
+            title: 'تعلم كتابة الحروف',
+            type: LessonType.writing,
+            targetLetters: ['ق', 'ك', 'ل', 'م', 'ن'],
+          ),
+        ],
+        games: [],
+      ),
+
+      // المستوى 6: الحروف الأخيرة (هـ - ي)
+      Level(
+        id: 6,
+        title: 'إكمال الأبجدية',
+        targetLetters: ['هـ', 'و', 'ي'],
+        requiredStarsToUnlock: 25,
+        lessons: [
+          Lesson(
+            id: 'advanced_6_lesson',
+            title: 'تعلم كتابة الحروف',
+            type: LessonType.writing,
+            targetLetters: ['هـ', 'و', 'ي'],
+          ),
+        ],
+        games: [],
+      ),
+    ],
+  );
+
   // قائمة جميع المراحل
   static final List<Stage> allStages = [
     preparatoryStage,
     basicStage,
+    advancedStage,
   ];
 
   // الحصول على مرحلة بواسطة ID

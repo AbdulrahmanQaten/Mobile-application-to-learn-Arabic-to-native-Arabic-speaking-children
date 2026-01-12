@@ -15,57 +15,57 @@ class AdvancedLesson {
 }
 
 class AdvancedLessonsData {
-  // المستوى 1: الحروف البسيطة (بدون نقاط)
+  // المستوى 1: الحروف (أ - ج)
   static const lesson1 = AdvancedLesson(
     id: 'advanced_1',
-    name: 'الحروف البسيطة',
-    description: 'تعلم كتابة الحروف بدون نقاط',
-    letters: ['ا', 'د', 'ذ', 'ر', 'ز', 'و'],
+    name: 'الحروف الأولى',
+    description: 'تعلم كتابة الحروف الأولى',
+    letters: ['ا', 'ب', 'ت', 'ث', 'ج'],
     order: 1,
   );
 
-  // المستوى 2: الحروف بنقطة واحدة
+  // المستوى 2: الحروف (ح - ر)
   static const lesson2 = AdvancedLesson(
     id: 'advanced_2',
-    name: 'الحروف بنقطة',
-    description: 'تعلم كتابة الحروف التي لها نقطة واحدة',
-    letters: ['ن', 'ج', 'خ', 'ز'],
+    name: 'حروف جديدة',
+    description: 'تعلم كتابة حروف جديدة',
+    letters: ['ح', 'خ', 'د', 'ذ', 'ر'],
     order: 2,
   );
 
-  // المستوى 3: الحروف بنقطتين
+  // المستوى 3: الحروف (ز - ض)
   static const lesson3 = AdvancedLesson(
     id: 'advanced_3',
-    name: 'الحروف بنقطتين',
-    description: 'تعلم كتابة الحروف التي لها نقطتان',
-    letters: ['ب', 'ت', 'ث', 'ي'],
+    name: 'المزيد من الحروف',
+    description: 'تعلم كتابة المزيد من الحروف',
+    letters: ['ز', 'س', 'ش', 'ص', 'ض'],
     order: 3,
   );
 
-  // المستوى 4: الحروف المتشابهة (س، ش، ص، ض)
+  // المستوى 4: الحروف (ط - ف)
   static const lesson4 = AdvancedLesson(
     id: 'advanced_4',
-    name: 'الحروف المتشابهة 1',
-    description: 'تعلم كتابة الحروف المتشابهة',
-    letters: ['س', 'ش', 'ص', 'ض'],
+    name: 'حروف مميزة',
+    description: 'تعلم كتابة حروف مميزة',
+    letters: ['ط', 'ظ', 'ع', 'غ', 'ف'],
     order: 4,
   );
 
-  // المستوى 5: الحروف المتشابهة (ط، ظ، ع، غ)
+  // المستوى 5: الحروف (ق - ن)
   static const lesson5 = AdvancedLesson(
     id: 'advanced_5',
-    name: 'الحروف المتشابهة 2',
-    description: 'تعلم كتابة الحروف المتشابهة',
-    letters: ['ط', 'ظ', 'ع', 'غ'],
+    name: 'نواصل التعلم',
+    description: 'تعلم كتابة حروف جديدة',
+    letters: ['ق', 'ك', 'ل', 'م', 'ن'],
     order: 5,
   );
 
-  // المستوى 6: باقي الحروف
+  // المستوى 6: الحروف الأخيرة (هـ - ي)
   static const lesson6 = AdvancedLesson(
     id: 'advanced_6',
-    name: 'الحروف المتبقية',
-    description: 'تعلم كتابة باقي الحروف',
-    letters: ['ف', 'ق', 'ك', 'ل', 'م', 'هـ', 'ح'],
+    name: 'إكمال الأبجدية',
+    description: 'تعلم كتابة آخر الحروف',
+    letters: ['هـ', 'و', 'ي'],
     order: 6,
   );
 

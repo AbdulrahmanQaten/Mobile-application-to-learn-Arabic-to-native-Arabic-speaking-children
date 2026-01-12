@@ -136,218 +136,233 @@ class _StoreScreenState extends State<StoreScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          // الشريط العلوي الثابت - سطر واحد
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppTheme.primarySkyBlue, AppTheme.lightSkyBlue],
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          body: Column(
+            children: [
+              // الشريط العلوي الثابت - سطر واحد
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      themeProvider.primaryColor,
+                      themeProvider.secondaryColor
+                    ],
+                  ),
+                ),
+                child: SafeArea(
+                  bottom: false,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                    child: Row(
+                      children: [
+                        // زر الخروج
+                        IconButton(
+                          icon: Icon(Icons.arrow_back,
+                              color: Colors.white, size: 28),
+                          onPressed: () => Navigator.pop(context),
+                          padding: EdgeInsets.zero,
+                          constraints: BoxConstraints(),
+                        ),
+                        SizedBox(width: 15),
+                        // العنوان
+                        Text(
+                          'المتجر',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Spacer(),
+                        // النقاط
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(15),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(Icons.monetization_on,
+                                  color: Colors.amber, size: 20),
+                              SizedBox(width: 6),
+                              Text(
+                                '$totalPoints',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        // أيقونة المتجر
+                        Icon(Icons.store, color: Colors.white, size: 26),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 12),
-                child: Row(
-                  children: [
-                    // زر الخروج
-                    IconButton(
-                      icon:
-                          Icon(Icons.arrow_back, color: Colors.white, size: 28),
-                      onPressed: () => Navigator.pop(context),
-                      padding: EdgeInsets.zero,
-                      constraints: BoxConstraints(),
+
+              // المحتوى القابل للتمرير
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        themeProvider.secondaryColor.withOpacity(0.3),
+                        Colors.white,
+                      ],
                     ),
-                    SizedBox(width: 15),
-                    // العنوان
-                    Text(
-                      'المتجر',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Spacer(),
-                    // النقاط
-                    Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(15),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.monetization_on,
-                              color: Colors.amber, size: 20),
-                          SizedBox(width: 6),
-                          Text(
-                            '$totalPoints',
+                  ),
+                  child: CustomScrollView(
+                    slivers: [
+                      // حيوانات رخيصة
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
+                          child: Text(
+                            '🐾 حيوانات رخيصة (10-30 نقطة)',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppTheme.primarySkyBlue,
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 10),
-                    // أيقونة المتجر
-                    Icon(Icons.store, color: Colors.white, size: 26),
-                  ],
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildCharacterCard(
+                                CharactersData.cheap[index]),
+                            childCount: CharactersData.cheap.length,
+                          ),
+                        ),
+                      ),
+
+                      // حيوانات متوسطة
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
+                          child: Text(
+                            '🦊 حيوانات متوسطة (40-80 نقطة)',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primarySkyBlue,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildCharacterCard(
+                                CharactersData.medium[index]),
+                            childCount: CharactersData.medium.length,
+                          ),
+                        ),
+                      ),
+
+                      // حيوانات غالية
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
+                          child: Text(
+                            '🦁 حيوانات غالية (90-150 نقطة)',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primarySkyBlue,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => _buildCharacterCard(
+                                CharactersData.expensive[index]),
+                            childCount: CharactersData.expensive.length,
+                          ),
+                        ),
+                      ),
+
+                      // حيوانات نادرة
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
+                          child: Text(
+                            '🐬 حيوانات نادرة (160-200 نقطة)',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: AppTheme.primarySkyBlue,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 20, vertical: 0),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.85,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) =>
+                                _buildCharacterCard(CharactersData.rare[index]),
+                            childCount: CharactersData.rare.length,
+                          ),
+                        ),
+                      ),
+
+                      // مسافة في النهاية
+                      SliverToBoxAdapter(child: SizedBox(height: 30)),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
-
-          // المحتوى القابل للتمرير
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFFFFF4E6), Color(0xFFFFE6F0)],
-                ),
-              ),
-              child: CustomScrollView(
-                slivers: [
-                  // حيوانات رخيصة
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 20, 20, 10),
-                      child: Text(
-                        '🐾 حيوانات رخيصة (10-30 نقطة)',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primarySkyBlue,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.85,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            _buildCharacterCard(CharactersData.cheap[index]),
-                        childCount: CharactersData.cheap.length,
-                      ),
-                    ),
-                  ),
-
-                  // حيوانات متوسطة
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
-                      child: Text(
-                        '🦊 حيوانات متوسطة (40-80 نقطة)',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primarySkyBlue,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.85,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            _buildCharacterCard(CharactersData.medium[index]),
-                        childCount: CharactersData.medium.length,
-                      ),
-                    ),
-                  ),
-
-                  // حيوانات غالية
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
-                      child: Text(
-                        '🦁 حيوانات غالية (90-150 نقطة)',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primarySkyBlue,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.85,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _buildCharacterCard(
-                            CharactersData.expensive[index]),
-                        childCount: CharactersData.expensive.length,
-                      ),
-                    ),
-                  ),
-
-                  // حيوانات نادرة
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: EdgeInsets.fromLTRB(20, 30, 20, 10),
-                      child: Text(
-                        '🐬 حيوانات نادرة (160-200 نقطة)',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: AppTheme.primarySkyBlue,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 0),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.85,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) =>
-                            _buildCharacterCard(CharactersData.rare[index]),
-                        childCount: CharactersData.rare.length,
-                      ),
-                    ),
-                  ),
-
-                  // مسافة في النهاية
-                  SliverToBoxAdapter(child: SizedBox(height: 30)),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 

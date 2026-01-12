@@ -4,10 +4,12 @@ import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../widgets/coin_display.dart';
 import '../data/levels_data.dart';
+import '../data/advanced_lessons_data.dart';
 import 'levels_screen.dart';
 import 'store_screen.dart';
 import 'settings_screen.dart';
 import '../providers/theme_provider.dart';
+import 'advanced_level/advanced_level_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -158,15 +160,24 @@ class _HomeScreenState extends State<HomeScreen> {
       scrollDirection: Axis.horizontal,
       padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
       child: Row(
-        children: List.generate(4, (index) {
+        children: List.generate(stages.length, (index) {
           final isUnlocked = index < currentLevel;
-          final stage = index < stages.length ? stages[index] : null;
+          final stage = stages[index];
 
           // حساب النجوم الفعلية للمرحلة
           int stageStars = 0;
           int stageTotalStars = 0;
 
-          if (stage != null) {
+          if (stage.id == 'advanced') {
+            // المرحلة المتقدمة - استخدام IDs من AdvancedLessonsData
+            stageTotalStars = AdvancedLessonsData.allLessons.length * 3;
+            for (var lesson in AdvancedLessonsData.allLessons) {
+              final progress = DatabaseService.getLessonProgress(lesson.id);
+              if (progress != null) {
+                stageStars += progress.stars;
+              }
+            }
+          } else {
             stageTotalStars = stage.levels.length * 3; // كل مستوى له 3 نجوم
 
             // حساب النجوم المكتسبة
@@ -195,23 +206,40 @@ class _HomeScreenState extends State<HomeScreen> {
               screenWidth: screenWidth,
               screenHeight: screenHeight,
               onTap: () {
-                if (isUnlocked && stage != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => LevelsScreen(
-                        stageId: stage.id,
-                        stageName: _getStageName(index),
+                if (isUnlocked) {
+                  // التحقق من المرحلة المتقدمة
+                  if (index == 2) {
+                    // المرحلة المتقدمة - الكتابة اليدوية
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AdvancedLevelScreen(),
                       ),
-                    ),
-                  ).then((_) {
-                    // تحديث الشاشة عند الرجوع
-                    if (mounted) {
-                      setState(() {
-                        print('🔄 تحديث الشاشة الرئيسية');
-                      });
-                    }
-                  });
+                    ).then((_) {
+                      if (mounted) {
+                        setState(() {
+                          print('🔄 تحديث الشاشة الرئيسية');
+                        });
+                      }
+                    });
+                  } else {
+                    // المراحل الأخرى
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => LevelsScreen(
+                          stageId: stage.id,
+                          stageName: _getStageName(index),
+                        ),
+                      ),
+                    ).then((_) {
+                      if (mounted) {
+                        setState(() {
+                          print('🔄 تحديث الشاشة الرئيسية');
+                        });
+                      }
+                    });
+                  }
                 }
               },
             ),
@@ -474,6 +502,8 @@ class _StageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return GestureDetector(
       onTap: isUnlocked ? onTap : null,
       child: Container(
@@ -486,7 +516,7 @@ class _StageCard extends StatelessWidget {
                   end: Alignment.bottomLeft,
                   colors: [
                     Colors.white,
-                    AppTheme.lightSkyBlue.withOpacity(0.3),
+                    themeProvider.secondaryColor.withOpacity(0.3),
                   ],
                 )
               : null,
@@ -495,14 +525,14 @@ class _StageCard extends StatelessWidget {
           boxShadow: isUnlocked
               ? [
                   BoxShadow(
-                    color: AppTheme.primarySkyBlue.withOpacity(0.3),
+                    color: themeProvider.primaryColor.withOpacity(0.3),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
                 ]
               : [],
           border: Border.all(
-            color: isUnlocked ? AppTheme.primarySkyBlue : Colors.grey,
+            color: isUnlocked ? themeProvider.primaryColor : Colors.grey,
             width: 2.5,
           ),
         ),
@@ -520,7 +550,7 @@ class _StageCard extends StatelessWidget {
                 boxShadow: [
                   BoxShadow(
                     color: isUnlocked
-                        ? AppTheme.primarySkyBlue.withOpacity(0.25)
+                        ? themeProvider.primaryColor.withOpacity(0.25)
                         : Colors.grey.withOpacity(0.25),
                     blurRadius: 6,
                     offset: const Offset(0, 2),
@@ -545,7 +575,10 @@ class _StageCard extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: isUnlocked
                     ? LinearGradient(
-                        colors: [AppTheme.primarySkyBlue, AppTheme.darkSkyBlue],
+                        colors: [
+                          themeProvider.primaryColor,
+                          themeProvider.secondaryColor
+                        ],
                       )
                     : null,
                 color: isUnlocked ? null : Colors.grey,

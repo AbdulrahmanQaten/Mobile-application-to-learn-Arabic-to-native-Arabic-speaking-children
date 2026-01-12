@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../../theme/app_theme.dart';
 import '../../data/advanced_lessons_data.dart';
+import '../../providers/theme_provider.dart';
+import '../../services/database_service.dart';
+import '../../models/lesson_progress.dart';
 import 'handwriting_practice_screen.dart';
 
 class AdvancedLessonScreen extends StatefulWidget {
@@ -21,47 +25,51 @@ class _AdvancedLessonScreenState extends State<AdvancedLessonScreen> {
     final letterName = AdvancedLessonsData.getLetterName(currentLetter);
     final progress = (_currentLetterIndex + 1) / widget.lesson.letters.length;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.lesson.name),
-        backgroundColor: Color(0xFFFFD700),
-        foregroundColor: Colors.white,
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(40),
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-            color: Colors.white,
-            child: Row(
-              children: [
-                Expanded(
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    backgroundColor: Colors.grey[300],
-                    valueColor:
-                        AlwaysStoppedAnimation<Color>(Color(0xFFFFD700)),
-                    minHeight: 6,
-                  ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(widget.lesson.name),
+            backgroundColor: themeProvider.primaryColor,
+            foregroundColor: Colors.white,
+            bottom: PreferredSize(
+              preferredSize: Size.fromHeight(40),
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 15, vertical: 8),
+                color: Colors.white,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.grey[300],
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            themeProvider.primaryColor),
+                        minHeight: 6,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      '${_currentLetterIndex + 1}/${widget.lesson.letters.length}',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: themeProvider.primaryColor,
+                      ),
+                    ),
+                  ],
                 ),
-                SizedBox(width: 10),
-                Text(
-                  '${_currentLetterIndex + 1}/${widget.lesson.letters.length}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFFFD700),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
-      body: HandwritingPracticeScreen(
-        letter: currentLetter,
-        letterName: letterName,
-        onComplete: _goToNextLetter,
-        showAppBar: false,
-      ),
+          body: HandwritingPracticeScreen(
+            letter: currentLetter,
+            letterName: letterName,
+            onComplete: _goToNextLetter,
+            showAppBar: false,
+          ),
+        );
+      },
     );
   }
 
@@ -83,6 +91,16 @@ class _AdvancedLessonScreenState extends State<AdvancedLessonScreen> {
   }
 
   void _showCompletionDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    // حفظ التقدم - 3 نجوم لإكمال جميع الحروف
+    final progress = LessonProgress(
+      lessonId: widget.lesson.id,
+      isCompleted: true,
+      stars: 3,
+    );
+    DatabaseService.saveLessonProgress(progress);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -90,14 +108,32 @@ class _AdvancedLessonScreenState extends State<AdvancedLessonScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.celebration, color: Color(0xFFFFD700), size: 30),
+            Icon(Icons.celebration,
+                color: themeProvider.primaryColor, size: 30),
             SizedBox(width: 10),
             Text('أحسنت!'),
           ],
         ),
-        content: Text(
-          'لقد أكملت درس ${widget.lesson.name} بنجاح!\n\nتعلمت كتابة ${widget.lesson.letters.length} حروف.',
-          style: TextStyle(fontSize: 16),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'لقد أكملت درس ${widget.lesson.name} بنجاح!\\n\\nتعلمت كتابة ${widget.lesson.letters.length} حروف.',
+              style: TextStyle(fontSize: 16),
+            ),
+            SizedBox(height: 15),
+            // عرض النجوم
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(3, (index) {
+                return Icon(
+                  Icons.star,
+                  color: AppTheme.starYellow,
+                  size: 40,
+                );
+              }),
+            ),
+          ],
         ),
         actions: [
           TextButton(
@@ -110,7 +146,7 @@ class _AdvancedLessonScreenState extends State<AdvancedLessonScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFFFD700),
+                color: themeProvider.primaryColor,
               ),
             ),
           ),

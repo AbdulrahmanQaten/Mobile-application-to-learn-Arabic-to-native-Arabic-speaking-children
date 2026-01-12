@@ -5,6 +5,8 @@ import '../data/pronunciation_lessons_data.dart';
 import '../services/database_service.dart';
 import 'lesson_screen.dart';
 import 'pronunciation_lesson_screen.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class LevelsScreen extends StatefulWidget {
   final String stageId;
@@ -31,7 +33,9 @@ class _LevelsScreenState extends State<LevelsScreen> {
       // تحديد نوع الدرس بناءً على المرحلة
       final lessonId = widget.stageId == 'basic'
           ? 'pronunciation_${level.id}_lesson'
-          : 'level_${level.id}_lesson';
+          : widget.stageId == 'advanced'
+              ? 'advanced_${level.id}_lesson'
+              : 'level_${level.id}_lesson';
 
       final progress = DatabaseService.getLessonProgress(lessonId);
       if (progress == null || !progress.isCompleted) {
@@ -150,31 +154,35 @@ class _LevelsScreenState extends State<LevelsScreen> {
       );
     }
 
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topRight,
-            end: Alignment.bottomLeft,
-            colors: [
-              Color(0xFF87CEEB),
-              Color(0xFFB0E0E6),
-              Color(0xFFE0F6FF),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildHeader(context),
-              SizedBox(height: 20),
-              Expanded(
-                child: _buildLevelsList(context, stage),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return Scaffold(
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  themeProvider.primaryColor,
+                  themeProvider.secondaryColor,
+                  themeProvider.secondaryColor.withOpacity(0.5),
+                ],
               ),
-            ],
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildHeader(context),
+                  SizedBox(height: 20),
+                  Expanded(
+                    child: _buildLevelsList(context, stage),
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -215,7 +223,9 @@ class _LevelsScreenState extends State<LevelsScreen> {
           // تحديد نوع الدرس بناءً على المرحلة
           final previousLevelId = widget.stageId == 'basic'
               ? 'pronunciation_${stage.levels[index - 1].id}_lesson'
-              : 'level_${stage.levels[index - 1].id}_lesson';
+              : widget.stageId == 'advanced'
+                  ? 'advanced_${stage.levels[index - 1].id}_lesson'
+                  : 'level_${stage.levels[index - 1].id}_lesson';
 
           final previousProgress =
               DatabaseService.getLessonProgress(previousLevelId);
@@ -252,6 +262,24 @@ class _LevelsScreenState extends State<LevelsScreen> {
                     }
                   });
                 }
+              } else if (widget.stageId == 'advanced') {
+                // مرحلة المتقدم - دروس الكتابة اليدوية
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => LessonScreen(
+                      level: level,
+                      lessonId: 'advanced_${level.id}_lesson',
+                    ),
+                  ),
+                ).then((_) {
+                  if (mounted) {
+                    setState(() {
+                      print('🔄 تحديث شاشة المستويات');
+                      _checkStageCompletion();
+                    });
+                  }
+                });
               } else {
                 // مرحلة التمهيد - دروس الحروف
                 Navigator.push(
@@ -293,6 +321,7 @@ class _LevelCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return GestureDetector(
       onTap: isUnlocked ? onTap : null,
@@ -304,7 +333,7 @@ class _LevelCard extends StatelessWidget {
               ? LinearGradient(
                   colors: [
                     Colors.white,
-                    AppTheme.lightSkyBlue.withOpacity(0.3)
+                    themeProvider.secondaryColor.withOpacity(0.3)
                   ],
                 )
               : null,
@@ -313,14 +342,14 @@ class _LevelCard extends StatelessWidget {
           boxShadow: isUnlocked
               ? [
                   BoxShadow(
-                    color: AppTheme.primarySkyBlue.withOpacity(0.3),
+                    color: themeProvider.primaryColor.withOpacity(0.3),
                     blurRadius: 10,
                     offset: Offset(0, 5),
                   ),
                 ]
               : [],
           border: Border.all(
-            color: isUnlocked ? AppTheme.primarySkyBlue : Colors.grey,
+            color: isUnlocked ? themeProvider.primaryColor : Colors.grey,
             width: 2,
           ),
         ),
@@ -332,7 +361,7 @@ class _LevelCard extends StatelessWidget {
               height: 60,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isUnlocked ? AppTheme.primarySkyBlue : Colors.grey,
+                color: isUnlocked ? themeProvider.primaryColor : Colors.grey,
               ),
               child: Center(
                 child: isUnlocked
@@ -381,7 +410,7 @@ class _LevelCard extends StatelessWidget {
             if (isUnlocked)
               Icon(
                 Icons.arrow_forward_ios,
-                color: AppTheme.primarySkyBlue,
+                color: themeProvider.primaryColor,
                 size: 24,
               ),
           ],
