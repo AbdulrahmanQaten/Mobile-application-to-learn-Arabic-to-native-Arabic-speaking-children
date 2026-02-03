@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/advanced/drawing_canvas.dart';
-import '../../utils/handwriting_analyzer.dart';
+import '../../services/handwriting_service.dart';
 import '../../services/database_service.dart';
 
 class HandwritingPracticeScreen extends StatefulWidget {
@@ -27,8 +27,9 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
   final GlobalKey<DrawingCanvasState> _canvasKey =
       GlobalKey<DrawingCanvasState>();
   List<DrawingPoint> _currentDrawing = [];
-  HandwritingResult? _result;
+  HandwritingMLResult? _result;
   bool _showResult = false;
+  bool _isChecking = false;
 
   @override
   void didUpdateWidget(HandwritingPracticeScreen oldWidget) {
@@ -319,12 +320,22 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
     );
   }
 
-  void _checkDrawing() {
-    final result = HandwritingAnalyzer.analyze(_currentDrawing, widget.letter);
+  Future<void> _checkDrawing() async {
+    if (_isChecking) return;
+
+    setState(() {
+      _isChecking = true;
+    });
+
+    final result = await HandwritingRecognitionService.recognize(
+      _currentDrawing,
+      widget.letter,
+    );
 
     setState(() {
       _result = result;
       _showResult = true;
+      _isChecking = false;
     });
 
     // حفظ التقدم إذا نجح

@@ -298,12 +298,6 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(
-                'assets/images/backgrounds/background_pattern_stars_1764934179475.png'),
-            fit: BoxFit.cover,
-            opacity: 0.3,
-          ),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -414,33 +408,41 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
         padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05),
         child: Column(
           children: [
-            Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.04,
-                vertical: screenHeight * 0.025,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 12,
-                    offset: Offset(0, 4),
+            // السؤال في الأعلى للأسئلة الصوتية فقط
+            if (question.type == QuestionType.audioToLetter)
+              Column(
+                children: [
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.04,
+                      vertical: screenHeight * 0.025,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      question.question,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.045,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C3E50),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
+                  SizedBox(height: screenHeight * 0.025),
                 ],
               ),
-              child: Text(
-                question.question,
-                style: TextStyle(
-                  fontSize: screenWidth * 0.045, // أكبر للهواتف
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF2C3E50),
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-            SizedBox(height: screenHeight * 0.025),
+
+            // عرض السؤال حسب النوع
             if (question.type == QuestionType.audioToLetter)
               _buildAudioQuestion(question, screenHeight)
             else if (question.type == QuestionType.imageToFirstLetter ||
@@ -492,91 +494,163 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
   }
 
   Widget _buildImageQuestion(TestQuestion question, double screenHeight) {
-    return Column(
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          height: screenHeight * 0.25, // أكبر
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: EdgeInsets.all(12),
-              child: Image.asset(
-                'assets/${question.imagePath}',
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.image,
-                  size: screenHeight * 0.1,
-                  color: Colors.grey,
+        // السؤال والصورة على اليسار
+        Expanded(
+          flex: 4,
+          child: SizedBox(
+            height: screenHeight * 0.5, // زيادة الارتفاع لضمان ظهور الصورة
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // السؤال
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    question.question,
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
                 ),
-              ),
+                SizedBox(height: screenHeight * 0.02),
+                // الصورة بدون خلفية
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    alignment: Alignment.center,
+                    child: Image.asset(
+                      'assets/${question.imagePath}',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.image_not_supported,
+                        size: screenHeight * 0.1,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        SizedBox(height: screenHeight * 0.025),
-        _buildTextOptions(question.options, screenHeight),
+
+        SizedBox(width: screenWidth * 0.03),
+
+        // الاختيارات على اليمين (2×2)
+        Expanded(
+          flex: 5,
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: screenHeight * 0.015,
+            crossAxisSpacing: screenWidth * 0.02,
+            childAspectRatio: 1.3,
+            children: question.options.map((option) {
+              return GestureDetector(
+                onTap: () => _checkAnswer(option),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      option,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.075,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildWordToImageQuestion(
       TestQuestion question, double screenHeight, double screenWidth) {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: EdgeInsets.all(screenHeight * 0.025),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Color(0xFF2575FC).withOpacity(0.3),
-                blurRadius: 12,
-                offset: Offset(0, 4),
+        // الكلمة على اليسار
+        Expanded(
+          flex: 4,
+          child: Container(
+            height: screenHeight * 0.35,
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
               ),
-            ],
-          ),
-          child: Text(
-            question.word ?? '',
-            style: TextStyle(
-              fontSize: screenHeight * 0.045,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Color(0xFF2575FC).withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Text(
+                question.word ?? '',
+                style: TextStyle(
+                  fontSize: screenWidth * 0.12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+                textAlign: TextAlign.center,
+              ),
             ),
           ),
         ),
-        SizedBox(height: screenHeight * 0.025),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: screenWidth * 0.03,
-                mainAxisSpacing: screenHeight * 0.025,
-                childAspectRatio: 0.95, // أفضل للصور
-              ),
-              itemCount: question.options.length,
-              itemBuilder: (context, index) {
-                return _buildImageOption(
-                    question.options[index], screenHeight, screenWidth);
-              },
-            );
-          },
+
+        SizedBox(width: screenWidth * 0.03),
+
+        // الصور على اليمين (2×2)
+        Expanded(
+          flex: 6,
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: screenHeight * 0.015,
+            crossAxisSpacing: screenWidth * 0.02,
+            childAspectRatio: 1.0,
+            children: question.options.map((imagePath) {
+              return _buildImageOption(imagePath, screenHeight, screenWidth);
+            }).toList(),
+          ),
         ),
       ],
     );
@@ -584,36 +658,103 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
 
   Widget _buildImageToWordQuestion(
       TestQuestion question, double screenHeight, double screenWidth) {
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
-          height: screenHeight * 0.2,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 12,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Image.asset(
-              'assets/${question.imagePath}',
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Icon(
-                Icons.image,
-                size: screenHeight * 0.08,
-                color: Colors.grey,
-              ),
+        // السؤال والصورة على اليسار
+        Expanded(
+          flex: 4,
+          child: SizedBox(
+            height: screenHeight * 0.5, // زيادة الارتفاع
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // السؤال
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Text(
+                    question.question,
+                    style: TextStyle(
+                      fontSize: screenWidth * 0.04,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                SizedBox(height: screenHeight * 0.02),
+                // الصورة بدون خلفية
+                Expanded(
+                  child: Container(
+                    padding: EdgeInsets.all(4),
+                    alignment: Alignment.center,
+                    child: Image.asset(
+                      'assets/${question.imagePath}',
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => Icon(
+                        Icons.image_not_supported,
+                        size: screenHeight * 0.1,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-        SizedBox(height: screenHeight * 0.025),
-        _buildTextOptions(question.options, screenHeight),
+
+        SizedBox(width: screenWidth * 0.03),
+
+        // الاختيارات على اليمين (2×2)
+        Expanded(
+          flex: 5,
+          child: GridView.count(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            crossAxisCount: 2,
+            mainAxisSpacing: screenHeight * 0.015,
+            crossAxisSpacing: screenWidth * 0.02,
+            childAspectRatio: 1.3,
+            children: question.options.map((option) {
+              return GestureDetector(
+                onTap: () => _checkAnswer(option),
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0xFF4CAF50).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: Offset(0, 3),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      option,
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.065,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ),
       ],
     );
   }

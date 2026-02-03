@@ -41,6 +41,14 @@ dependencies:
   # Utilities
   intl: ^0.19.0
 
+  # Handwriting Recognition
+  google_mlkit_digital_ink_recognition: ^0.13.0
+
+dependency_overrides:
+  record_platform_interface: 1.2.0
+  record_linux: ^1.2.1
+  record_darwin: 1.0.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

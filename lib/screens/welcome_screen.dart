@@ -42,12 +42,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
 
     print('👤 إنشاء ملف طفل جديد: ${profile.name}, العمر: ${profile.age}');
-    
+
     // حفظ الملف في قاعدة البيانات
     await DatabaseService.saveChildProfile(profile);
-    
+
     print('✅ تم حفظ ملف الطفل بنجاح');
-    
+
     // التحقق من الحفظ
     final savedProfile = DatabaseService.getChildProfile();
     if (savedProfile != null) {
@@ -212,8 +212,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               spacing: screenWidth * 0.015,
                               runSpacing: screenHeight * 0.015,
                               alignment: WrapAlignment.center,
-                              children: List.generate(9, (index) {
-                                final age = index + 4;
+                              children: List.generate(4, (index) {
+                                final age = index + 5;
                                 final isSelected = age == _selectedAge;
 
                                 return GestureDetector(

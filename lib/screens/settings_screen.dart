@@ -95,9 +95,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: double.maxFinite,
           child: ListView.builder(
             shrinkWrap: true,
-            itemCount: 10,
+            itemCount: 4,
             itemBuilder: (context, index) {
-              final age = index + 3;
+              final age = index + 5;
               return ListTile(
                 title: Text('$age سنوات', textAlign: TextAlign.center),
                 onTap: () => Navigator.pop(context, age),

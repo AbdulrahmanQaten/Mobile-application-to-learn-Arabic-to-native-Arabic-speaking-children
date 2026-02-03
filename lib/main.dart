@@ -7,6 +7,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme/app_theme.dart';
 import 'screens/splash_screen.dart';
 import 'services/database_service.dart';
+import 'services/handwriting_service.dart';
 import 'models/child_profile.dart';
 import 'models/lesson_progress.dart';
 import 'models/achievement.dart';
@@ -29,12 +30,19 @@ void main() async {
   // تهيئة الإنجازات الافتراضية
   await DatabaseService.initializeDefaultAchievements();
 
-  // تحميل الثيم المحفوظ
+  // تهيئة خدمة التعرف على الكتابة (في الخلفية)
+  HandwritingRecognitionService.initialize().then((success) {
+    print('🖊️ خدمة التعرف على الكتابة: ${success ? "جاهزة" : "غير متاحة"}');
+  });
+
+  // تحميل الثيم المحفوظ - فقط إذا اختار المستخدم شخصية غير الافتراضية
   final themeProvider = ThemeProvider();
   final profile = DatabaseService.getChildProfile();
-  if (profile != null) {
+  if (profile != null && profile.selectedCharacter != 'قطة') {
+    // المستخدم اختار شخصية مختلفة
     themeProvider.updateTheme(profile.selectedCharacter);
   }
+  // إذا كانت الشخصية قطة (الافتراضية)، نبقي الثيم الأزرق الافتراضي
 
   // تعيين الاتجاه الأفقي فقط
   await SystemChrome.setPreferredOrientations([

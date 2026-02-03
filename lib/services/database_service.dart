@@ -121,41 +121,52 @@ class DatabaseService {
   /// إكمال درس
   static Future<void> completeLesson(String lessonId, int stars) async {
     print('🎯 بدء حفظ الدرس: $lessonId بنجوم: $stars');
-    
+
     var progress = getLessonProgress(lessonId);
+    final bool isFirstCompletion = progress == null || !progress.isCompleted;
+    final int previousStars = progress?.stars ?? 0;
 
     if (progress == null) {
       progress = LessonProgress(lessonId: lessonId);
       print('🟢 إنشاء تقدم جديد للدرس');
     } else {
-      print('🟡 تحديث تقدم موجود');
+      print('🟡 تحديث تقدم موجود (نجوم سابقة: $previousStars)');
     }
 
+    // حفظ تقدم الدرس (سيتم تحديث النجوم فقط إذا كانت أعلى)
     progress.complete(100, stars);
     await saveLessonProgress(progress);
     print('✅ تم حفظ تقدم الدرس');
 
-    // تحديث ملف الطفل
+    // تحديث ملف الطفل فقط إذا كان أول إكمال أو حصل على نجوم أعلى
     final profile = getChildProfile();
     if (profile != null) {
-      print('🔵 تحديث ملف الطفل');
-      
-      // إضافة النقاط حسب عدد النجوم
-      final points = stars * 10; // كل نجمة = 10 نقاط
-      profile.addPoints(points);
-      print('💰 إضافة $points نقطة');
-      
-      // إضافة النجوم
-      profile.addStars(stars);
-      print('⭐ إضافة $stars نجمة');
-      
-      // إكمال الدرس
-      profile.completeLesson();
-      print('📚 زيادة عدد الدروس المكتملة');
-      
+      // حساب النجوم الإضافية (الفرق فقط)
+      final newStars = stars > previousStars ? stars - previousStars : 0;
+
+      if (newStars > 0) {
+        print('🔵 تحديث ملف الطفل - نجوم جديدة: $newStars');
+
+        // إضافة النقاط حسب النجوم الجديدة فقط
+        final points = newStars * 10;
+        profile.addPoints(points);
+        print('💰 إضافة $points نقطة');
+
+        // إضافة النجوم الجديدة فقط
+        profile.addStars(newStars);
+        print('⭐ إضافة $newStars نجمة');
+      }
+
+      // زيادة عدد الدروس المكتملة فقط في المرة الأولى
+      if (isFirstCompletion) {
+        profile.completeLesson();
+        print('📚 زيادة عدد الدروس المكتملة');
+      }
+
       // حفظ الملف
       await saveChildProfile(profile);
-      print('✅ تم حفظ ملف الطفل - النجوم: ${profile.totalStars}, النقاط: ${profile.totalPoints}, الدروس: ${profile.completedLessons}');
+      print(
+          '✅ تم حفظ ملف الطفل - النجوم: ${profile.totalStars}, النقاط: ${profile.totalPoints}, الدروس: ${profile.completedLessons}');
     } else {
       print('❌ لا يوجد ملف طفل!');
     }
@@ -199,10 +210,10 @@ class DatabaseService {
 
     // خصم النقاط
     profile.totalPoints -= price;
-    
+
     // إضافة الشخصية للمشتريات
     profile.purchasedCharacters.add(characterId);
-    
+
     await saveChildProfile(profile);
     print('✅ تم شراء الشخصية: $characterId');
     return true;
