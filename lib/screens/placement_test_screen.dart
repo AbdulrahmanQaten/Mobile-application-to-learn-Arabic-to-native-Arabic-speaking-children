@@ -499,11 +499,11 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // السؤال والصورة على اليسار
+        // السؤال والصورة على اليسار (مساحة أكبر للصورة)
         Expanded(
-          flex: 4,
+          flex: 6,
           child: SizedBox(
-            height: screenHeight * 0.5, // زيادة الارتفاع لضمان ظهور الصورة
+            height: screenHeight * 0.55, // زيادة الارتفاع
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -526,11 +526,11 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
                     textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.02),
+                SizedBox(height: screenHeight * 0.01),
                 // الصورة بدون خلفية
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.all(4),
+                    padding: EdgeInsets.zero, // إزالة الهوامش
                     alignment: Alignment.center,
                     child: Image.asset(
                       'assets/${question.imagePath}',
@@ -548,11 +548,11 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
           ),
         ),
 
-        SizedBox(width: screenWidth * 0.03),
+        SizedBox(width: screenWidth * 0.02),
 
         // الاختيارات على اليمين (2×2)
         Expanded(
-          flex: 5,
+          flex: 4,
           child: GridView.count(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),
@@ -607,7 +607,7 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
           flex: 4,
           child: Container(
             height: screenHeight * 0.35,
-            padding: EdgeInsets.all(20),
+            padding: EdgeInsets.symmetric(horizontal: 8), // تقليل البادينغ
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [Color(0xFF6A11CB), Color(0xFF2575FC)],
@@ -621,15 +621,21 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                question.word ?? '',
-                style: TextStyle(
-                  fontSize: screenWidth * 0.12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+            alignment: Alignment.center, // ضمان التوسيط
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Padding(
+                padding: EdgeInsets.all(12), // بادينغ داخلي للنص
+                child: Text(
+                  question.word ?? '',
+                  style: TextStyle(
+                    fontSize: screenWidth * 0.1, // حجم كبير ولكن قابل للتصغير
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.2, // تحسين ارتفاع السطر
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
               ),
             ),
           ),
@@ -661,11 +667,11 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // السؤال والصورة على اليسار
+        // السؤال والصورة على اليسار (مساحة أكبر)
         Expanded(
-          flex: 4,
+          flex: 6,
           child: SizedBox(
-            height: screenHeight * 0.5, // زيادة الارتفاع
+            height: screenHeight * 0.55, // زيادة الارتفاع
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -688,11 +694,11 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
                     textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.02),
+                SizedBox(height: screenHeight * 0.01),
                 // الصورة بدون خلفية
                 Expanded(
                   child: Container(
-                    padding: EdgeInsets.all(4),
+                    padding: EdgeInsets.zero, // إزالة الهوامش
                     alignment: Alignment.center,
                     child: Image.asset(
                       'assets/${question.imagePath}',
@@ -710,11 +716,11 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
           ),
         ),
 
-        SizedBox(width: screenWidth * 0.03),
+        SizedBox(width: screenWidth * 0.02),
 
         // الاختيارات على اليمين (2×2)
         Expanded(
-          flex: 5,
+          flex: 4,
           child: GridView.count(
             shrinkWrap: true,
             physics: NeverScrollableScrollPhysics(),

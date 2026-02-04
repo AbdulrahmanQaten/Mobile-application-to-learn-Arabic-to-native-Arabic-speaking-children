@@ -7,7 +7,7 @@ import 'package:record/record.dart';
 import '../theme/app_theme.dart';
 import '../data/pronunciation_lessons_data.dart';
 import '../services/database_service.dart';
-import 'basic_level_test_screen.dart';
+import 'pronunciation_quiz_screen.dart';
 import 'dart:math';
 
 class PronunciationLessonScreen extends StatefulWidget {
@@ -29,7 +29,7 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
     with SingleTickerProviderStateMixin {
   int _currentWordIndex = 0;
   final AudioPlayer _audioPlayer = AudioPlayer();
-  late stt.SpeechToText _speech;
+  final stt.SpeechToText _speech = stt.SpeechToText(); // تهيئة مباشرة
   late AudioRecorder _recorder;
   bool _isListening = false;
   bool _speechAvailable = false;
@@ -64,7 +64,6 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
       return;
     }
 
-    _speech = stt.SpeechToText();
     try {
       _speechAvailable = await _speech.initialize(
         onStatus: (status) => print('🎤 حالة التعرف: $status'),
@@ -379,20 +378,31 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
                 ),
               ),
 
-              // زر إنهاء الدرس
+              // زر بدء الاختبار
               if (_currentWordIndex == widget.level.words.length - 1)
                 Positioned(
                   bottom: 20,
                   left: 0,
                   right: 0,
                   child: Center(
-                    child: ElevatedButton(
-                      onPressed: _completeLesson,
-                      child: Text('إنهاء الدرس',
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => PronunciationQuizScreen(
+                              lessonId: widget.lessonId,
+                              lessonName: widget.level.name,
+                            ),
+                          ),
+                        );
+                      },
+                      icon: Icon(Icons.quiz, size: 24),
+                      label: Text('ابدأ الاختبار',
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.successGreen,
+                        backgroundColor: AppTheme.starYellow,
                         foregroundColor: Colors.white,
                         padding:
                             EdgeInsets.symmetric(horizontal: 40, vertical: 15),
@@ -641,9 +651,9 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => BasicLevelTestScreen(
-                      levelId: widget.level.id,
-                      levelName: widget.level.name,
+                    builder: (context) => PronunciationQuizScreen(
+                      lessonId: widget.lessonId,
+                      lessonName: widget.level.name,
                     ),
                   ),
                 );
@@ -687,9 +697,9 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => BasicLevelTestScreen(
-                        levelId: widget.level.id,
-                        levelName: widget.level.name,
+                      builder: (context) => PronunciationQuizScreen(
+                        lessonId: widget.lessonId,
+                        lessonName: widget.level.name,
                       ),
                     ),
                   );

@@ -27,6 +27,19 @@ class _LevelsScreenState extends State<LevelsScreen> {
     final stage = LevelsData.getStage(widget.stageId);
     if (stage == null) return;
 
+    // التحقق من أن المرحلة لم تُكمل من قبل
+    final profile = DatabaseService.getChildProfile();
+    if (profile != null) {
+      // مرحلة التمهيد: إذا كان المستوى >= 3 فهي مكتملة
+      if (widget.stageId == 'preparatory' && profile.currentLevel >= 3) {
+        return; // المرحلة مكتملة سابقاً، لا نعرض الديالوج
+      }
+      // مرحلة الأساسي: إذا كان المستوى >= 4 فهي مكتملة
+      if (widget.stageId == 'basic' && profile.currentLevel >= 4) {
+        return;
+      }
+    }
+
     // التحقق من إكمال جميع المستويات
     bool allCompleted = true;
     for (var level in stage.levels) {
@@ -111,17 +124,36 @@ class _LevelsScreenState extends State<LevelsScreen> {
                 SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    // رفع المستوى
+                    // رفع المستوى بشكل آمن
                     final profile = DatabaseService.getChildProfile();
                     if (profile != null) {
-                      profile.currentLevel++;
+                      // مكافأة إتمام المرحلة (فقط عند الرفع الأول)
+                      bool isNewCompletion = false;
+                      if (profile.currentLevel < 3) {
+                         // كان في التمهيد وأنهاه
+                         isNewCompletion = true;
+                      }
+
+                      // إذا أنهى مرحلة التمهيد (المستوى < 3)، نرفعه للمستوى 3 (الكتابة)
+                      // إذا كان أصلاً 3 أو أكثر، نرفعه للمستوى التالي
+                      if (profile.currentLevel < 3) {
+                         profile.currentLevel = 3;
+                      } else {
+                         profile.currentLevel++;
+                      }
+                      
+                      if (isNewCompletion) {
+                         profile.addPoints(250); // مكافأة 250 عملة لإتمام المرحلة
+                         print('💰 تم إضافة مكافأة إتمام المرحلة: 250');
+                      }
+
                       await DatabaseService.saveChildProfile(profile);
                       print('🎊 تم رفع المستوى إلى: ${profile.currentLevel}');
                     }
 
                     if (mounted) {
                       Navigator.pop(context); // إغلاق الديالوج
-                      Navigator.pop(context); // الرجوع للشاشة الرئيسية
+                      Navigator.pop(context, true); // الرجوع للشاشة الرئيسية مع إشارة تحديث
                     }
                   },
                   child: Text('متابعة',

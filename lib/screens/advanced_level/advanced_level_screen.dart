@@ -29,8 +29,9 @@ class _AdvancedLevelScreenState extends State<AdvancedLevelScreen> {
 
     // التحقق من أن المستوى الحالي لم يُرفع بعد
     final profile = DatabaseService.getChildProfile();
-    if (profile != null && profile.currentLevel >= 3) {
-      // المرحلة مكتملة من قبل، لا نعرض الديالوج
+    if (profile != null && profile.currentLevel >= 4) {
+      // المرحلة مكتملة من قبل (المستوى 4 يعني مرحلة النطق مفتوحة)
+      // لا نعرض الديالوج
       return;
     }
 
@@ -115,10 +116,18 @@ class _AdvancedLevelScreenState extends State<AdvancedLevelScreen> {
                   onPressed: () async {
                     // رفع المستوى لفتح المرحلة التالية
                     final profile = DatabaseService.getChildProfile();
-                    if (profile != null && profile.currentLevel < 3) {
-                      profile.currentLevel = 3; // فتح المرحلة الثالثة (النطق)
-                      await DatabaseService.saveChildProfile(profile);
-                      print('🎊 تم رفع المستوى إلى: ${profile.currentLevel}');
+                    if (profile != null) {
+                      // مكافأة إتمام المرحلة
+                      if (profile.currentLevel < 4) {
+                         profile.addPoints(250); // مكافأة 250 عملة
+                         print('💰 تم إضافة مكافأة إتمام المرحلة: 250');
+                      }
+
+                      if (profile.currentLevel < 4) {
+                        profile.currentLevel = 4; // فتح المرحلة الثالثة (النطق)
+                        await DatabaseService.saveChildProfile(profile);
+                        print('🎊 تم رفع المستوى إلى: ${profile.currentLevel}');
+                      }
                     }
 
                     if (mounted) {

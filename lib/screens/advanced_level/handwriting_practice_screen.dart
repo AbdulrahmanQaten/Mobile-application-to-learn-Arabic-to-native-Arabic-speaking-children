@@ -340,7 +340,12 @@ class _HandwritingPracticeScreenState extends State<HandwritingPracticeScreen> {
 
     // حفظ التقدم إذا نجح
     if (result.isPassed) {
-      DatabaseService.completeLesson('handwriting_${widget.letter}', 3);
+      // التحقق من عدم الحفظ مسبقاً لنفس الجلسة لتجنب التكرار
+      if (_result != null && _result!.isPassed) {
+         // تم الحفظ مسبقاً
+      } else {
+        await DatabaseService.completeLesson('handwriting_${widget.letter}', 3);
+      }
     }
   }
 }
