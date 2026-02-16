@@ -46,6 +46,7 @@ class TestIntroductionScreen extends StatelessWidget {
                 Image.asset(
                   'assets/images/characters/arab_boy_happy_1764934023454.png',
                   height: screenHeight * 0.25,
+                  filterQuality: FilterQuality.high,
                   errorBuilder: (context, error, stackTrace) => Icon(
                     Icons.child_care,
                     size: screenHeight * 0.2,

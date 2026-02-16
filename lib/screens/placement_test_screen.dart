@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../theme/app_theme.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 import '../data/placement_test_data.dart';
 import '../services/database_service.dart';
 import 'home_screen.dart';
@@ -29,6 +32,16 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
   late AnimationController _slideController;
   bool _isAnswered = false;
 
+  // Speech recognition variables
+  final stt.SpeechToText _speech = stt.SpeechToText();
+  bool _isListening = false;
+  bool _speechAvailable = false;
+  String _recognizedText = '';
+  bool _showPronunciationResult = false;
+  bool _isPronunciationCorrect = false;
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +58,16 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
     );
 
     _slideController.forward();
+
+    // Initialize speech recognition
+    _pulseController = AnimationController(
+      duration: Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+    _initializeSpeech();
   }
 
   @override
@@ -52,6 +75,8 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
     _audioPlayer.dispose();
     _bounceController.dispose();
     _slideController.dispose();
+    _pulseController.dispose();
+    _speech.stop();
     super.dispose();
   }
 
@@ -64,6 +89,171 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
         print('Error playing sound: $e');
       }
     }
+  }
+
+  // ========== Speech Recognition Methods ==========
+  Future<void> _initializeSpeech() async {
+    if (kIsWeb) {
+      setState(() => _speechAvailable = false);
+      return;
+    }
+    try {
+      _speechAvailable = await _speech.initialize(
+        onStatus: (status) => print('🎤 حالة التعرف: $status'),
+        onError: (error) => print('❌ خطأ في التعرف: $error'),
+      );
+      setState(() {});
+    } catch (e) {
+      print('❌ فشل تهيئة التعرف على الصوت: $e');
+      setState(() => _speechAvailable = false);
+    }
+  }
+
+  Future<void> _startListeningForPronunciation() async {
+    if (kIsWeb) {
+      _showWebNotSupported();
+      return;
+    }
+    if (!_speechAvailable) {
+      _showSpeechNotAvailable();
+      return;
+    }
+    final status = await Permission.microphone.request();
+    if (!status.isGranted) {
+      _showPermissionDenied();
+      return;
+    }
+
+    setState(() {
+      _isListening = true;
+      _showPronunciationResult = false;
+      _recognizedText = '';
+    });
+
+    try {
+      await _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _recognizedText = result.recognizedWords;
+          });
+        },
+        localeId: 'ar_SA',
+        listenFor: Duration(seconds: 5),
+        pauseFor: Duration(seconds: 3),
+      );
+      Future.delayed(Duration(seconds: 5), () {
+        if (_isListening) _stopListeningForPronunciation();
+      });
+    } catch (e) {
+      print('❌ خطأ في بدء الاستماع: $e');
+      setState(() => _isListening = false);
+    }
+  }
+
+  Future<void> _stopListeningForPronunciation() async {
+    await _speech.stop();
+    setState(() => _isListening = false);
+    _checkPronunciationAnswer();
+  }
+
+  void _checkPronunciationAnswer() {
+    final question = _questions[_currentQuestionIndex];
+    final targetWord = question.correctAnswer;
+    final similarity = _calculateSimilarity(_recognizedText, targetWord);
+
+    print('🔍 المقارنة: "$_recognizedText" vs "$targetWord" = $similarity%');
+
+    final isCorrect = similarity >= 70;
+
+    setState(() {
+      _isPronunciationCorrect = isCorrect;
+      _showPronunciationResult = true;
+      _isAnswered = true;
+    });
+
+    if (isCorrect) {
+      _correctAnswers++;
+      _bounceController.forward().then((_) => _bounceController.reverse());
+    }
+
+    _showFeedback(isCorrect);
+
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        Navigator.of(context).pop();
+        setState(() {
+          _showPronunciationResult = false;
+          _recognizedText = '';
+        });
+        _moveToNextQuestion();
+      }
+    });
+  }
+
+  int _calculateSimilarity(String recognized, String target) {
+    recognized = recognized.trim().replaceAll(RegExp(r'[\u064B-\u065F]'), '');
+    target = target.trim().replaceAll(RegExp(r'[\u064B-\u065F]'), '');
+    if (recognized.isEmpty) return 0;
+    if (recognized == target) return 100;
+    if (recognized.contains(target) || target.contains(recognized)) return 85;
+    int matches = 0;
+    for (int i = 0; i < recognized.length && i < target.length; i++) {
+      if (recognized[i] == target[i]) matches++;
+    }
+    return ((matches / target.length) * 100).round();
+  }
+
+  void _showWebNotSupported() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('غير متوفر على الويب',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('ميزة التعرف على الصوت متوفرة فقط على تطبيق الهاتف.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('حسناً', style: TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSpeechNotAvailable() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('غير متوفر', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('التعرف على الصوت غير متوفر على هذا الجهاز.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('حسناً', style: TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPermissionDenied() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('أذونات الميكروفون',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('نحتاج إلى إذن الميكروفون للتعرف على نطقك.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('حسناً', style: TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
+    );
   }
 
   void _checkAnswer(String selectedAnswer) {
@@ -112,19 +302,19 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
       builder: (context) => Dialog(
         backgroundColor: Colors.transparent,
         child: Container(
-          padding: const EdgeInsets.all(30),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: isCorrect
                   ? [Color(0xFF4CAF50), Color(0xFF81C784)]
                   : [Color(0xFFFF9800), Color(0xFFFFB74D)],
             ),
-            borderRadius: BorderRadius.circular(30),
+            borderRadius: BorderRadius.circular(25),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                offset: Offset(0, 10),
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 15,
+                offset: Offset(0, 8),
               ),
             ],
           ),
@@ -134,13 +324,13 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
               Icon(
                 isCorrect ? Icons.star : Icons.lightbulb,
                 color: Colors.white,
-                size: 70,
+                size: 45,
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 10),
               Text(
                 isCorrect ? 'أحسنت! 🎉' : 'حاول مرة أخرى 💪',
                 style: TextStyle(
-                  fontSize: 26,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -156,115 +346,107 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
   void _showResults() {
     final level = PlacementTestData.determineLevelFromScore(_correctAnswers);
     final message = PlacementTestData.getEncouragementMessage(_correctAnswers);
+    final levelNumber = _getLevelNumber(level);
+
+    // حساب النجوم بناءً على النتيجة (3 مراحل = حد أقصى 3 نجوم)
+    int earnedStars;
+    if (_correctAnswers <= 7)
+      earnedStars = 1;
+    else if (_correctAnswers <= 14)
+      earnedStars = 2;
+    else
+      earnedStars = 3;
+
+    // حساب الذهب (كل إجابة صحيحة = 10 ذهب)
+    int earnedGold = _correctAnswers * 10;
+
+    // تحديد المراحل المفتوحة (4 مراحل)
+    List<String> unlockedStages = ['📖 مرحلة التمهيد'];
+    if (levelNumber >= 3) unlockedStages.add('✏️ مرحلة الكتابة');
+    if (levelNumber >= 4) unlockedStages.add('🎤 مرحلة النطق');
+    if (levelNumber >= 5) unlockedStages.add('🏆 مرحلة المتقن');
 
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: SingleChildScrollView(
-          child: Container(
-            padding: const EdgeInsets.all(25),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF6A11CB),
-                  Color(0xFF2575FC),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(25),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Image.asset(
-                  'assets/images/characters/arab_kids_celebrating_1764934121585.png',
-                  height: 100,
-                  errorBuilder: (context, error, stackTrace) => Icon(
-                    Icons.celebration,
-                    size: 70,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'نتيجتك: $_correctAnswers / ${_questions.length}',
-                  style: TextStyle(
-                    fontSize: 24,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(Icons.celebration, color: Colors.amber, size: 40),
+            const SizedBox(height: 8),
+            Text('نتيجة الاختبار',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('$_correctAnswers / ${_questions.length}',
+                style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Text(
-                    level,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  message,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 18),
-                ElevatedButton(
-                  onPressed: () async {
-                    // حفظ نتيجة الاختبار
-                    final levelNumber = _getLevelNumber(level);
-                    await DatabaseService.savePlacementTestResult(
-                      score: _correctAnswers,
-                      level: levelNumber,
-                    );
-
-                    if (!mounted) return;
-
-                    Navigator.of(context).pop();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Color(0xFF2575FC),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 30, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Text(
-                    'ابدأ التعلم! 🚀',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
+                    color: Color(0xFF2575FC))),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                  3,
+                  (i) => Icon(
+                        i < earnedStars ? Icons.star : Icons.star_border,
+                        color: Colors.amber,
+                        size: 28,
+                      )),
+            ),
+            const SizedBox(height: 8),
+            Text(level,
+                style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primarySkyBlue)),
+            const SizedBox(height: 4),
+            Text('+$earnedGold ذهب 🪙',
+                style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.amber[700],
+                    fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            Text(message,
+                style: TextStyle(fontSize: 13, color: AppTheme.textDark),
+                textAlign: TextAlign.center),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                await DatabaseService.savePlacementTestResult(
+                  score: _correctAnswers,
+                  level: levelNumber,
+                );
+                await DatabaseService.addStars(earnedStars);
+                await DatabaseService.addPoints(earnedGold);
+                if (!mounted) return;
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF2575FC),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text('ابدأ التعلم! 🚀',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -331,6 +513,7 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
                     Image.asset(
                       'assets/images/characters/arab_child_thinking_1764934154475.png',
                       height: screenHeight * 0.08,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.child_care,
                         size: screenHeight * 0.06,
@@ -452,7 +635,9 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
             else if (question.type == QuestionType.wordToImage)
               _buildWordToImageQuestion(question, screenHeight, screenWidth)
             else if (question.type == QuestionType.imageToWord)
-              _buildImageToWordQuestion(question, screenHeight, screenWidth),
+              _buildImageToWordQuestion(question, screenHeight, screenWidth)
+            else if (question.type == QuestionType.pronunciation)
+              _buildPronunciationQuestion(question, screenHeight, screenWidth),
           ],
         ),
       ),
@@ -535,6 +720,7 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
                     child: Image.asset(
                       'assets/${question.imagePath}',
                       fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.image_not_supported,
                         size: screenHeight * 0.1,
@@ -703,6 +889,7 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
                     child: Image.asset(
                       'assets/${question.imagePath}',
                       fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (context, error, stackTrace) => Icon(
                         Icons.image_not_supported,
                         size: screenHeight * 0.1,
@@ -761,6 +948,159 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
             }).toList(),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildPronunciationQuestion(
+      TestQuestion question, double screenHeight, double screenWidth) {
+    return Column(
+      children: [
+        // عنوان السؤال
+        Container(
+          padding: EdgeInsets.symmetric(
+            horizontal: screenWidth * 0.04,
+            vertical: screenHeight * 0.02,
+          ),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 12,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Text(
+            question.question,
+            style: TextStyle(
+              fontSize: screenWidth * 0.045,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2C3E50),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.025),
+
+        // صورة الحيوان
+        Container(
+          height: screenHeight * 0.25,
+          width: screenWidth * 0.6,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(25),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.15),
+                blurRadius: 15,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(25),
+            child: Image.asset(
+              'assets/${question.imagePath}',
+              fit: BoxFit.contain,
+              filterQuality: FilterQuality.high,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.image_not_supported,
+                size: screenHeight * 0.1,
+                color: Colors.grey,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.025),
+
+        // اسم الكلمة المطلوبة
+        Text(
+          question.word ?? '',
+          style: TextStyle(
+            fontSize: screenWidth * 0.08,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.02),
+
+        // زر الميكروفون
+        GestureDetector(
+          onTap: _isAnswered
+              ? null
+              : (_isListening
+                  ? _stopListeningForPronunciation
+                  : _startListeningForPronunciation),
+          child: ScaleTransition(
+            scale: _isListening ? _pulseAnimation : AlwaysStoppedAnimation(1.0),
+            child: Container(
+              width: screenWidth * 0.2,
+              height: screenWidth * 0.2,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: _isListening
+                      ? [Color(0xFFFF5252), Color(0xFFFF1744)]
+                      : _isAnswered
+                          ? [Colors.grey, Colors.grey.shade600]
+                          : [Color(0xFF4CAF50), Color(0xFF2E7D32)],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: (_isListening
+                            ? Colors.red
+                            : _isAnswered
+                                ? Colors.grey
+                                : Colors.green)
+                        .withOpacity(0.4),
+                    blurRadius: 15,
+                    spreadRadius: 3,
+                  ),
+                ],
+              ),
+              child: Icon(
+                _isListening ? Icons.stop : Icons.mic,
+                color: Colors.white,
+                size: screenWidth * 0.1,
+              ),
+            ),
+          ),
+        ),
+        SizedBox(height: screenHeight * 0.015),
+
+        // النص المتعرف عليه
+        if (_recognizedText.isNotEmpty)
+          Container(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: Text(
+              '🎤 $_recognizedText',
+              style: TextStyle(
+                fontSize: screenWidth * 0.045,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+
+        if (_isListening)
+          Padding(
+            padding: EdgeInsets.only(top: screenHeight * 0.01),
+            child: Text(
+              'جارِ الاستماع...',
+              style: TextStyle(
+                fontSize: screenWidth * 0.035,
+                color: Colors.white70,
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -833,6 +1173,7 @@ class _PlacementTestScreenState extends State<PlacementTestScreen>
             child: Image.asset(
               'assets/$imagePath',
               fit: BoxFit.contain, // contain بدلاً من cover
+              filterQuality: FilterQuality.high,
               errorBuilder: (context, error, stackTrace) => Icon(
                 Icons.image,
                 size: screenWidth * 0.12,

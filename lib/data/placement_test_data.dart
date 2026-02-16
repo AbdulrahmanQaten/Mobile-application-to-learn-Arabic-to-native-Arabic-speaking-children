@@ -8,6 +8,7 @@ enum QuestionType {
   wordToImage,
   completeWord,
   countLetters,
+  pronunciation,
 }
 
 class TestQuestion {
@@ -801,62 +802,162 @@ class PlacementTestData {
         word: 'فيل'),
   ];
 
+  // المستوى 4: أسئلة النطق - pronunciation (10 أسئلة)
+  static final List<TestQuestion> level4PronunciationQuestions = [
+    TestQuestion(
+        id: 'L4_P1',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/أسد.jpg',
+        options: [],
+        correctAnswer: 'أسد',
+        level: 4,
+        word: 'أسد'),
+    TestQuestion(
+        id: 'L4_P2',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/قطة.jpg',
+        options: [],
+        correctAnswer: 'قطة',
+        level: 4,
+        word: 'قطة'),
+    TestQuestion(
+        id: 'L4_P3',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/كلب.jpg',
+        options: [],
+        correctAnswer: 'كلب',
+        level: 4,
+        word: 'كلب'),
+    TestQuestion(
+        id: 'L4_P4',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/فيل.jpg',
+        options: [],
+        correctAnswer: 'فيل',
+        level: 4,
+        word: 'فيل'),
+    TestQuestion(
+        id: 'L4_P5',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/جمل.jpg',
+        options: [],
+        correctAnswer: 'جمل',
+        level: 4,
+        word: 'جمل'),
+    TestQuestion(
+        id: 'L4_P6',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/أرنب.jpg',
+        options: [],
+        correctAnswer: 'أرنب',
+        level: 4,
+        word: 'أرنب'),
+    TestQuestion(
+        id: 'L4_P7',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/بقرة.jpg',
+        options: [],
+        correctAnswer: 'بقرة',
+        level: 4,
+        word: 'بقرة'),
+    TestQuestion(
+        id: 'L4_P8',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/خروف.jpg',
+        options: [],
+        correctAnswer: 'خروف',
+        level: 4,
+        word: 'خروف'),
+    TestQuestion(
+        id: 'L4_P9',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/زرافة.jpg',
+        options: [],
+        correctAnswer: 'زرافة',
+        level: 4,
+        word: 'زرافة'),
+    TestQuestion(
+        id: 'L4_P10',
+        type: QuestionType.pronunciation,
+        question: 'انطق اسم الحيوان في الصورة',
+        imagePath: 'images/animals/نمر.jpg',
+        options: [],
+        correctAnswer: 'نمر',
+        level: 4,
+        word: 'نمر'),
+  ];
+
   // اختيار 20 سؤالاً بتوزيع متساوي لأنواع الأسئلة
   static List<TestQuestion> getAllQuestions() {
     final random = Random();
     final allQuestions = <TestQuestion>[];
 
-    // المستوى 1: 7 أسئلة audioToLetter
+    // المستوى 1: 5 أسئلة audioToLetter
     final shuffledL1 = List<TestQuestion>.from(level1AudioQuestions)
       ..shuffle(random);
-    allQuestions.addAll(shuffledL1.take(7));
+    allQuestions.addAll(shuffledL1.take(5));
 
-    // المستوى 2: 4 imageToFirstLetter + 3 countLetters = 7 أسئلة
+    // المستوى 2: 3 imageToFirstLetter + 3 countLetters = 6 أسئلة
     final shuffledL2First = List<TestQuestion>.from(level2FirstLetterQuestions)
       ..shuffle(random);
     final shuffledL2Count = List<TestQuestion>.from(level2CountQuestions)
       ..shuffle(random);
-    allQuestions.addAll(shuffledL2First.take(4));
+    allQuestions.addAll(shuffledL2First.take(3));
     allQuestions.addAll(shuffledL2Count.take(3));
 
-    // المستوى 3: 3 wordToImage + 2 imageToWord + 1 completeWord = 6 أسئلة
+    // المستوى 3: 2 wordToImage + 1 imageToWord + 1 completeWord = 4 أسئلة
     final shuffledL3WI = List<TestQuestion>.from(level3WordToImageQuestions)
       ..shuffle(random);
     final shuffledL3IW = List<TestQuestion>.from(level3ImageToWordQuestions)
       ..shuffle(random);
     final shuffledL3CW = List<TestQuestion>.from(level3CompleteWordQuestions)
       ..shuffle(random);
-    allQuestions.addAll(shuffledL3WI.take(3));
-    allQuestions.addAll(shuffledL3IW.take(2));
+    allQuestions.addAll(shuffledL3WI.take(2));
+    allQuestions.addAll(shuffledL3IW.take(1));
     allQuestions.addAll(shuffledL3CW.take(1));
+
+    // المستوى 4: 5 أسئلة نطق pronunciation
+    final shuffledL4 = List<TestQuestion>.from(level4PronunciationQuestions)
+      ..shuffle(random);
+    allQuestions.addAll(shuffledL4.take(5));
 
     // خلط خيارات كل سؤال
     return allQuestions.map((q) => q.shuffleOptions()).toList();
   }
 
   static String determineLevelFromScore(int score) {
-    if (score <= 5)
+    // التطبيق لديه 4 مراحل:
+    // مرحلة التمهيد (index 0) - دائماً مفتوحة
+    // مرحلة الكتابة (index 1) - تفتح عند currentLevel >= 3
+    // مرحلة النطق (index 2) - تفتح عند currentLevel >= 4
+    // مرحلة المتقن (index 3) - تفتح عند currentLevel >= 5
+    if (score <= 7)
       return 'المستوى 1 - مرحلة التمهيد';
-    else if (score <= 10)
-      return 'المستوى 2 - مرحلة التأسيس';
     else if (score <= 14)
-      return 'المستوى 3 - مرحلة التطوير';
-    else if (score <= 17)
-      return 'المستوى 4 - مرحلة متقدمة';
+      return 'المستوى 3 - مرحلة التمهيد والكتابة';
+    else if (score <= 18)
+      return 'المستوى 4 - التمهيد والكتابة والنطق';
     else
-      return 'المستوى 5 - مرحلة متقدمة جداً';
+      return 'المستوى 5 - جميع المراحل';
   }
 
   static String getEncouragementMessage(int score) {
-    if (score <= 5)
-      return 'رائع! سنبدأ معاً من البداية لنتعلم الحروف 🌟';
-    else if (score <= 10)
-      return 'ممتاز! أنت تعرف الحروف، الآن سنتعلم الكلمات 📚';
+    if (score <= 7)
+      return 'سنبدأ معاً من مرحلة التمهيد لنتعلم الحروف! 🌟';
     else if (score <= 14)
-      return 'أحسنت! أنت قارئ جيد، سنطور مهاراتك أكثر 🎯';
-    else if (score <= 17)
-      return 'مذهل! مستواك متقدم، سنتحدى معاً 🚀';
+      return 'أحسنت! فتحنا لك مرحلة التمهيد ومرحلة الكتابة! ✏️📖';
+    else if (score <= 18)
+      return 'رائع! فتحنا لك التمهيد والكتابة والنطق! 🎤✏️📖';
     else
-      return 'رائع جداً! أنت نجم القراءة ⭐';
+      return 'ممتاز! فتحنا لك جميع المراحل بما فيها المتقن! 🏆';
   }
 }

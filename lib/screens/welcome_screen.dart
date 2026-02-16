@@ -121,6 +121,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             child: Image.asset(
                               'assets/images/ui/app_logo.png',
                               fit: BoxFit.contain,
+                              filterQuality: FilterQuality.high,
                             ),
                           ),
                           SizedBox(height: screenHeight * 0.03),

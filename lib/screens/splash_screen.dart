@@ -147,6 +147,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 width: 140,
                                 height: 140,
                                 fit: BoxFit.contain,
+                                filterQuality: FilterQuality.high,
                               ),
                             ),
                           ),

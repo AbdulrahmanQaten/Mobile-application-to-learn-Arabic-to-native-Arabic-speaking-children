@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../services/database_service.dart';
 import '../providers/theme_provider.dart';
+import 'welcome_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -245,6 +246,67 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                         SizedBox(height: 30),
 
+                        // إعادة تعيين
+                        _buildSectionTitle('إعادة التعيين'),
+                        InkWell(
+                          onTap: () => _showResetConfirmation(themeProvider.primaryColor),
+                          borderRadius: BorderRadius.circular(15),
+                          child: Container(
+                            padding: EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(15),
+                              border: Border.all(color: Colors.red.withOpacity(0.3)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Icon(Icons.restart_alt, color: Colors.red, size: 24),
+                                ),
+                                SizedBox(width: 15),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'إعادة تعيين التطبيق',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        'حذف جميع البيانات والبدء من جديد',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Icon(Icons.warning_amber, size: 20, color: Colors.red),
+                              ],
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: 30),
+
                         // معلومات التطبيق
                         _buildSectionTitle('حول التطبيق'),
                         _buildSettingCard(
@@ -264,6 +326,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
       },
     );
+  }
+
+  Future<void> _showResetConfirmation(Color primaryColor) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber, color: Colors.red, size: 28),
+            SizedBox(width: 10),
+            Text('تأكيد إعادة التعيين', style: TextStyle(fontSize: 18)),
+          ],
+        ),
+        content: Text(
+          'سيتم حذف جميع بياناتك (التقدم، النجوم، الذهب، الشخصيات) والبدء من جديد.\n\nهل أنت متأكد؟',
+          style: TextStyle(fontSize: 15, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text('إلغاء', style: TextStyle(fontSize: 16)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('إعادة تعيين', style: TextStyle(fontSize: 16)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && mounted) {
+      await DatabaseService.deleteProfile();
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => WelcomeScreen()),
+          (route) => false,
+        );
+      }
+    }
   }
 
   Widget _buildSectionTitle(String title) {

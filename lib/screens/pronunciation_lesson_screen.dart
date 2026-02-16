@@ -28,6 +28,7 @@ class PronunciationLessonScreen extends StatefulWidget {
 class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
     with SingleTickerProviderStateMixin {
   int _currentWordIndex = 0;
+  bool _lessonComplete = false;
   final AudioPlayer _audioPlayer = AudioPlayer();
   final stt.SpeechToText _speech = stt.SpeechToText(); // تهيئة مباشرة
   late AudioRecorder _recorder;
@@ -225,8 +226,9 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
   }
 
   void _completeLesson() {
-    DatabaseService.completeLesson(widget.lessonId, 3);
-    Navigator.pop(context);
+    setState(() {
+      _lessonComplete = true;
+    });
   }
 
   void _showWebNotSupported() {
@@ -313,7 +315,7 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
                     child: PageView.builder(
                       controller: _pageController,
                       itemCount: widget.level.words.length,
-                      physics: const BouncingScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       onPageChanged: (index) {
                         setState(() {
                           _currentWordIndex = index;
@@ -378,8 +380,9 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
                 ),
               ),
 
-              // زر بدء الاختبار
-              if (_currentWordIndex == widget.level.words.length - 1)
+
+              // زر بدء الاختبار بعد إكمال جميع الكلمات
+              if (_lessonComplete)
                 Positioned(
                   bottom: 20,
                   left: 0,
@@ -643,81 +646,26 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
               color: Colors.white,
             ),
           ),
-          if (_isCorrect) ...[
+          if (!_isCorrect) ...[
             SizedBox(height: 15),
             ElevatedButton(
               onPressed: () {
-                // الانتقال للاختبار مباشرة
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => PronunciationQuizScreen(
-                      lessonId: widget.lessonId,
-                      lessonName: widget.level.name,
-                    ),
-                  ),
-                );
+                setState(() {
+                  _showResult = false;
+                  _recognizedText = '';
+                });
               },
-              child: Text('إنهاء الدرس والبدء بالاختبار',
+              child: Text('حاول مجدداً',
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.starYellow,
-                foregroundColor: Colors.white,
+                backgroundColor: Colors.white,
+                foregroundColor: AppTheme.warningOrange,
                 padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(20)),
               ),
             ),
           ],
-          SizedBox(height: 15),
-          ElevatedButton(
-            onPressed: () {
-              setState(() {
-                _showResult = false;
-                _recognizedText = '';
-              });
-            },
-            child: Text('حاول مجدداً',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: AppTheme.warningOrange,
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
-            ),
-          ),
-          // ],
-          // زر الانتقال للاختبار
-          if (_currentWordIndex == widget.level.words.length - 1)
-            Padding(
-              padding: EdgeInsets.only(top: 20),
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => PronunciationQuizScreen(
-                        lessonId: widget.lessonId,
-                        lessonName: widget.level.name,
-                      ),
-                    ),
-                  );
-                },
-                icon: Icon(Icons.quiz, size: 28),
-                label: Text('ابدأ الاختبار',
-                    style:
-                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.starYellow,
-                  foregroundColor: Colors.white,
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25)),
-                  elevation: 8,
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -752,6 +700,7 @@ class _PronunciationLessonScreenState extends State<PronunciationLessonScreen>
     return Image.asset(
       'assets/${word.imagePath}',
       fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
       errorBuilder: (context, error, stackTrace) {
         return Center(
           child: Icon(Icons.image, size: 100, color: Colors.grey),

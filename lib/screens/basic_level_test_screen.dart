@@ -112,89 +112,69 @@ class _BasicLevelTestScreenState extends State<BasicLevelTestScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-            maxWidth: 350,
-          ),
-          padding: EdgeInsets.all(20),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.emoji_events,
-                        color: AppTheme.starYellow, size: 40),
-                    SizedBox(width: 10),
-                    Text('نتيجة الاختبار',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 20)),
-                  ],
-                ),
-                SizedBox(height: 20),
-                Text(
-                  '$score من ${questions.length}',
-                  style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primarySkyBlue),
-                ),
-                SizedBox(height: 10),
-                Text(
-                  '$percentage%',
-                  style: TextStyle(fontSize: 24, color: AppTheme.textDark),
-                ),
-                SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (index) {
-                    return Icon(
-                      index < stars ? Icons.star : Icons.star_border,
-                      color: AppTheme.starYellow,
-                      size: 40,
-                    );
-                  }),
-                ),
-                SizedBox(height: 25),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        Navigator.pop(context);
-                      },
-                      child: Text('العودة', style: TextStyle(fontSize: 16)),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(context);
-                        setState(() {
-                          currentQuestionIndex = 0;
-                          score = 0;
-                          selectedAnswerId = null;
-                          showingFeedback = false;
-                        });
-                        _playQuestionAudio();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primarySkyBlue,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15)),
-                      ),
-                      child: Text('إعادة',
-                          style: TextStyle(fontSize: 16, color: Colors.white)),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 40),
+            const SizedBox(height: 8),
+            Text('نتيجة الاختبار',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('$score / ${questions.length}',
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primarySkyBlue)),
+            Text('$percentage%',
+                style: TextStyle(fontSize: 16, color: AppTheme.textDark)),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                  3,
+                  (index) => Icon(
+                        index < stars ? Icons.star : Icons.star_border,
+                        color: AppTheme.starYellow,
+                        size: 30,
+                      )),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: Text('العودة', style: TextStyle(fontSize: 15)),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                currentQuestionIndex = 0;
+                score = 0;
+                selectedAnswerId = null;
+                showingFeedback = false;
+              });
+              _playQuestionAudio();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primarySkyBlue,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            child: Text('إعادة',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
@@ -406,6 +386,7 @@ class _BasicLevelTestScreenState extends State<BasicLevelTestScreen> {
                                   child: Image.asset(
                                     'assets/${option.imagePath}',
                                     fit: BoxFit.contain,
+                                    filterQuality: FilterQuality.high,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Icon(Icons.image,
                                           size: 60, color: Colors.grey);

@@ -5,11 +5,13 @@ import '../services/database_service.dart';
 import '../widgets/coin_display.dart';
 import '../data/levels_data.dart';
 import '../data/advanced_lessons_data.dart';
+import '../data/mastery_stage_data.dart';
 import 'levels_screen.dart';
 import 'store_screen.dart';
 import 'settings_screen.dart';
 import '../providers/theme_provider.dart';
 import 'advanced_level/advanced_level_screen.dart';
+import 'mastery_level/mastery_level_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +28,22 @@ class _HomeScreenState extends State<HomeScreen> {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return Scaffold(
+          // ⚠️ زر مؤقت للاختبار - احذفه لاحقاً
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => MasteryLevelScreen(),
+                ),
+              ).then((_) {
+                if (mounted) setState(() {});
+              });
+            },
+            backgroundColor: Color(0xFF6A11CB),
+            icon: Icon(Icons.auto_stories, color: Colors.white),
+            label: Text('🏆 المتقن', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
           body: Container(
             decoration: BoxDecoration(
               gradient: LinearGradient(
@@ -162,10 +180,11 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: List.generate(stages.length, (index) {
           // فتح المراحل بناءً على currentLevel من اختبار تحديد المستوى
-          // currentLevel 1-2 = مرحلة التمهيد فقط
-          // currentLevel 3 = مرحلة التمهيد + الكتابة
-          // currentLevel 4 = مرحلة التمهيد + الكتابة + النطق
-          // currentLevel 5 = جميع المراحل
+          // المراحل الفعلية: 4 مراحل
+          // index 0: مرحلة التمهيد - دائماً مفتوحة
+          // index 1: مرحلة الكتابة - تفتح عند currentLevel >= 3
+          // index 2: مرحلة النطق - تفتح عند currentLevel >= 4
+          // index 3: مرحلة المتقن - تفتح عند currentLevel >= 5
           bool isUnlocked = false;
           if (index == 0) {
             isUnlocked = true; // مرحلة التمهيد دائماً مفتوحة
@@ -188,6 +207,15 @@ class _HomeScreenState extends State<HomeScreen> {
             stageTotalStars = AdvancedLessonsData.allLessons.length * 3;
             for (var lesson in AdvancedLessonsData.allLessons) {
               final progress = DatabaseService.getLessonProgress(lesson.id);
+              if (progress != null) {
+                stageStars += progress.stars;
+              }
+            }
+          } else if (stage.id == 'mastery') {
+            // مرحلة المتقن - استخدام IDs من MasteryStageData
+            stageTotalStars = MasteryStageData.allStories.length * 3;
+            for (var story in MasteryStageData.allStories) {
+              final progress = DatabaseService.getLessonProgress(story.id);
               if (progress != null) {
                 stageStars += progress.stars;
               }
@@ -222,20 +250,25 @@ class _HomeScreenState extends State<HomeScreen> {
               screenHeight: screenHeight,
               onTap: () {
                 if (isUnlocked) {
-                  // التحقق من المرحلة المتقدمة
                   if (index == 1) {
-                    // المرحلة المتقدمة - الكتابة اليدوية (المرحلة الثانية)
+                    // المرحلة المتقدمة - الكتابة اليدوية
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => AdvancedLevelScreen(),
                       ),
                     ).then((_) {
-                      if (mounted) {
-                        setState(() {
-                          print('🔄 تحديث الشاشة الرئيسية');
-                        });
-                      }
+                      if (mounted) setState(() {});
+                    });
+                  } else if (index == 3) {
+                    // مرحلة المتقن - القصص التفاعلية
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MasteryLevelScreen(),
+                      ),
+                    ).then((_) {
+                      if (mounted) setState(() {});
                     });
                   } else {
                     // المراحل الأخرى
@@ -248,12 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                     ).then((_) {
-                      // تحديث الشاشة عند العودة
-                      if (mounted) {
-                        setState(() {
-                          // إعادة تحميل البيانات
-                        });
-                      }
+                      if (mounted) setState(() {});
                     });
                   }
                 }
@@ -264,6 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
+
 
   String _getStageName(int index) {
     switch (index) {
@@ -332,6 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Image.asset(
                   'assets/images/animals/${profile.selectedCharacter}.jpg',
                   fit: BoxFit.contain,
+                  filterQuality: FilterQuality.high,
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(Icons.pets,
                         size: 40, color: themeProvider.primaryColor);
@@ -575,7 +605,7 @@ class _StageCard extends StatelessWidget {
               ),
               padding: EdgeInsets.all(screenWidth * 0.015),
               child: isUnlocked
-                  ? Image.asset(iconPath, fit: BoxFit.contain)
+                  ? Image.asset(iconPath, fit: BoxFit.contain, filterQuality: FilterQuality.high)
                   : Icon(Icons.lock,
                       size: screenWidth * 0.055, color: Colors.grey[600]),
             ),

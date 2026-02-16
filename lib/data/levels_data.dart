@@ -1,4 +1,5 @@
 import 'letters_data.dart';
+import 'mastery_stage_data.dart';
 
 enum LessonType {
   reading,
@@ -397,7 +398,25 @@ class LevelsData {
     preparatoryStage,
     advancedStage, // المرحلة الثانية: الكتابة
     basicStage, // المرحلة الثالثة: النطق
+    masteryStage, // المرحلة الرابعة: المتقن (قصص تفاعلية)
   ];
+
+  // مرحلة المتقن - قصص تفاعلية مصورة
+  static final Stage masteryStage = Stage(
+    id: 'mastery',
+    name: 'مرحلة المتقن',
+    description: 'قصص تفاعلية مصورة تجمع القراءة والكتابة والنطق',
+    iconPath: 'assets/images/ui/stage_4.png',
+    requiredStarsToUnlock: 0,
+    levels: MasteryStageData.allStories.map((story) => Level(
+      id: story.order,
+      title: story.title,
+      targetLetters: [],
+      lessons: [],
+      games: [],
+      requiredStarsToUnlock: story.order == 1 ? 0 : (story.order - 1) * 2,
+    )).toList(),
+  );
 
   // الحصول على مرحلة بواسطة ID
   static Stage? getStage(String id) {

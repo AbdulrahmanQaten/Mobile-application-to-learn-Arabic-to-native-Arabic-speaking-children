@@ -131,112 +131,59 @@ class _AdvancedLessonScreenState extends State<AdvancedLessonScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.75,
-            maxWidth: 400,
-          ),
-          padding: EdgeInsets.all(25),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.white, Color(0xFFFFF9E6)],
-            ),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // أيقونة الكأس
-                Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 70),
-                SizedBox(height: 15),
-
-                // عنوان النجاح
-                Text(
-                  '🎉 مبروك! 🎉',
-                  style: TextStyle(
-                    fontSize: 26,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 40),
+            SizedBox(height: 8),
+            Text('🎉 مبروك! 🎉',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: themeProvider.primaryColor,
-                  ),
-                ),
-                SizedBox(height: 12),
-
-                // رسالة النجاح
-                Text(
-                  'لقد أكملت درس ${widget.lesson.name} بنجاح!',
-                  style: TextStyle(fontSize: 18, color: AppTheme.textDark),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'تعلمت كتابة ${widget.lesson.letters.length} حروف',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppTheme.successGreen,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 20),
-
-                // النجوم
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(3, (index) {
-                    return Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 5),
-                      child: Icon(
+                    color: themeProvider.primaryColor)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('أكملت درس ${widget.lesson.name} بنجاح!',
+                style: TextStyle(fontSize: 15, color: AppTheme.textDark),
+                textAlign: TextAlign.center),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                  3,
+                  (index) => Icon(
                         Icons.star,
                         color: AppTheme.starYellow,
-                        size: 45,
-                      ),
-                    );
-                  }),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  '3 نجوم',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: AppTheme.textDark,
-                  ),
-                ),
-                SizedBox(height: 25),
-
-                // زر المتابعة
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context); // إغلاق الحوار
-                    Navigator.pop(context); // العودة لقائمة الدروس
-                  },
-                  child: Text(
-                    'رائع! 🌟',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.successGreen,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                    elevation: 8,
-                    shadowColor: AppTheme.successGreen.withOpacity(0.5),
-                  ),
-                ),
-              ],
+                        size: 30,
+                      )),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.successGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text('رائع! 🌟',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

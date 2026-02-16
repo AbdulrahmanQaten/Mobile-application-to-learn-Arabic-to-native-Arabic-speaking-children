@@ -216,6 +216,7 @@ class LetterLessonWidget extends StatelessWidget {
               child: Image.asset(
                 example['image']!,
                 fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
                 errorBuilder: (context, error, stackTrace) {
                   return Center(
                       child: Text(example['emoji']!,

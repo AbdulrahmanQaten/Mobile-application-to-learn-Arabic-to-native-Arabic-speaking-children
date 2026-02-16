@@ -444,8 +444,8 @@ class HandwritingRecognitionService {
     final cleanRecognized = recognized.trim();
     final cleanTarget = target.trim();
 
+    // تطابق مباشر فقط - لا نقبل كلمات تحتوي الحرف
     if (cleanRecognized == cleanTarget) return true;
-    if (cleanRecognized.contains(cleanTarget)) return true;
 
     final similarLetters = {
       'ا': ['أ', 'إ', 'آ', 'ا'],

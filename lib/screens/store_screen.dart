@@ -443,6 +443,7 @@ class _StoreScreenState extends State<StoreScreen> {
                       'assets/images/animals/${character.id}.jpg',
                       width: double.infinity,
                       fit: BoxFit.contain,
+                      filterQuality: FilterQuality.high,
                       errorBuilder: (context, error, stackTrace) {
                         print('❌ خطأ في تحميل صورة: ${character.id}');
                         return Container(

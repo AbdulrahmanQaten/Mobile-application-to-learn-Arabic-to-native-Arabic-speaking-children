@@ -122,69 +122,53 @@ class _GameScreenState extends State<GameScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(40),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primarySkyBlue, AppTheme.lightSkyBlue],
-            ),
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: AppTheme.cardShadow,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 120),
-              const SizedBox(height: 20),
-              Text(
-                'أحسنت! 🎉',
-                style: TextStyle(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 15),
-              Text(
-                'لقد أكملت المستوى!',
-                style: TextStyle(
-                  fontSize: 26,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.star, color: AppTheme.starYellow, size: 40),
-                  const SizedBox(width: 10),
-                  Text(
-                    'النقاط: $_score',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              CustomButton(
-                text: 'العودة للمستويات',
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                backgroundColor: Colors.white,
-                textColor: AppTheme.primarySkyBlue,
-                width: 250,
-              ),
-            ],
-          ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 40),
+            const SizedBox(height: 8),
+            Text('أحسنت! 🎉',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.star, color: AppTheme.starYellow, size: 22),
+                const SizedBox(width: 6),
+                Text('النقاط: $_score',
+                    style:
+                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                Navigator.pop(context);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primarySkyBlue,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text('العودة للمستويات',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -193,62 +177,59 @@ class _GameScreenState extends State<GameScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.all(40),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(30),
-            boxShadow: AppTheme.cardShadow,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(Icons.refresh, color: AppTheme.warningOrange, size: 40),
+            const SizedBox(height: 8),
+            Text('حاول مرة أخرى! 💪',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          ],
+        ),
+        actions: [
+          Row(
             children: [
-              Icon(Icons.refresh, color: AppTheme.warningOrange, size: 100),
-              const SizedBox(height: 20),
-              Text(
-                'حاول مرة أخرى! 💪',
-                style: TextStyle(
-                  fontSize: 36,
-                  fontWeight: FontWeight.bold,
-                  color: AppTheme.textDark,
+              Expanded(
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                  child: Text('الخروج',
+                      style: TextStyle(fontSize: 15, color: Colors.grey)),
                 ),
               ),
-              const SizedBox(height: 30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  CustomButton(
-                    text: 'إعادة المحاولة',
-                    onPressed: () {
-                      Navigator.pop(context);
-                      setState(() {
-                        _score = 0;
-                        _hearts = 3;
-                        _currentQuestion = 0;
-                        _selectedLetter = null;
-                        _showFeedback = false;
-                        _generateQuestions();
-                      });
-                    },
-                    width: 200,
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      _score = 0;
+                      _hearts = 3;
+                      _currentQuestion = 0;
+                      _selectedLetter = null;
+                      _showFeedback = false;
+                      _generateQuestions();
+                    });
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primarySkyBlue,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
                   ),
-                  CustomButton(
-                    text: 'الخروج',
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                      Navigator.pop(context);
-                    },
-                    backgroundColor: Colors.grey[400],
-                    width: 150,
-                  ),
-                ],
+                  child: Text('إعادة',
+                      style:
+                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+                ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

@@ -66,111 +66,81 @@ class _LevelsScreenState extends State<LevelsScreen> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.7,
-            maxWidth: 400,
-          ),
-          padding: EdgeInsets.all(25),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.white, Color(0xFFFFF9E6)],
-            ),
-            borderRadius: BorderRadius.circular(30),
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 60),
-                SizedBox(height: 15),
-                Text(
-                  '🎉 مبروك! 🎉',
-                  style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.primarySkyBlue),
-                ),
-                SizedBox(height: 12),
-                Text(
-                  'لقد أكملت ${widget.stageName} بنجاح!',
-                  style: TextStyle(fontSize: 16, color: AppTheme.textDark),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'المرحلة التالية أصبحت متاحة الآن',
-                  style: TextStyle(
-                      fontSize: 14,
-                      color: AppTheme.successGreen,
-                      fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 15),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(
-                      5,
-                      (i) => Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 3),
-                            child: Icon(Icons.star,
-                                color: AppTheme.starYellow, size: 30),
-                          )),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    // رفع المستوى بشكل آمن
-                    final profile = DatabaseService.getChildProfile();
-                    if (profile != null) {
-                      // مكافأة إتمام المرحلة (فقط عند الرفع الأول)
-                      bool isNewCompletion = false;
-                      if (profile.currentLevel < 3) {
-                         // كان في التمهيد وأنهاه
-                         isNewCompletion = true;
-                      }
-
-                      // إذا أنهى مرحلة التمهيد (المستوى < 3)، نرفعه للمستوى 3 (الكتابة)
-                      // إذا كان أصلاً 3 أو أكثر، نرفعه للمستوى التالي
-                      if (profile.currentLevel < 3) {
-                         profile.currentLevel = 3;
-                      } else {
-                         profile.currentLevel++;
-                      }
-                      
-                      if (isNewCompletion) {
-                         profile.addPoints(250); // مكافأة 250 عملة لإتمام المرحلة
-                         print('💰 تم إضافة مكافأة إتمام المرحلة: 250');
-                      }
-
-                      await DatabaseService.saveChildProfile(profile);
-                      print('🎊 تم رفع المستوى إلى: ${profile.currentLevel}');
-                    }
-
-                    if (mounted) {
-                      Navigator.pop(context); // إغلاق الديالوج
-                      Navigator.pop(context, true); // الرجوع للشاشة الرئيسية مع إشارة تحديث
-                    }
-                  },
-                  child: Text('متابعة',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.successGreen,
-                    foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20)),
-                  ),
-                ),
-              ],
-            ),
-          ),
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Column(
+          children: [
+            Icon(Icons.emoji_events, color: AppTheme.starYellow, size: 40),
+            SizedBox(height: 8),
+            Text('🎉 مبروك! 🎉',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primarySkyBlue)),
+          ],
         ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('أكملت ${widget.stageName} بنجاح!',
+                style: TextStyle(fontSize: 15, color: AppTheme.textDark),
+                textAlign: TextAlign.center),
+            SizedBox(height: 6),
+            Text('المرحلة التالية أصبحت متاحة',
+                style: TextStyle(
+                    fontSize: 13,
+                    color: AppTheme.successGreen,
+                    fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center),
+            SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                  5,
+                  (i) =>
+                      Icon(Icons.star, color: AppTheme.starYellow, size: 24)),
+            ),
+          ],
+        ),
+        actions: [
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () async {
+                final profile = DatabaseService.getChildProfile();
+                if (profile != null) {
+                  bool isNewCompletion = false;
+                  if (profile.currentLevel < 3) {
+                    isNewCompletion = true;
+                  }
+                  if (profile.currentLevel < 3) {
+                    profile.currentLevel = 3;
+                  } else {
+                    profile.currentLevel++;
+                  }
+                  if (isNewCompletion) {
+                    profile.addPoints(250);
+                  }
+                  await DatabaseService.saveChildProfile(profile);
+                }
+                if (mounted) {
+                  Navigator.pop(context);
+                  Navigator.pop(context, true);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.successGreen,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: EdgeInsets.symmetric(vertical: 12),
+              ),
+              child: Text('متابعة',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ),
+          ),
+        ],
       ),
     );
   }
